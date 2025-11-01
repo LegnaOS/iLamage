@@ -304,8 +304,16 @@ function convertFramesToWebP(frames, item, store, locale, tmpDir) {
 
     logger.info('apng2webp', '=== APNG to WEBP Complete ===')
   }).catch(err => {
-    logger.error('apng2webp', 'WEBP conversion failed:', err.message)
-    logger.error('apng2webp', 'Stack:', err.stack)
+    logger.error('apng2webp', 'WEBP conversion failed')
+    logger.error('apng2webp', 'Error object:', JSON.stringify(err, null, 2))
+
+    if (err.command) {
+      logger.error('apng2webp', 'Command:', err.command)
+    }
+    if (err.err) {
+      logger.error('apng2webp', 'Error details:', err.err)
+    }
+
     throw err
   })
 }

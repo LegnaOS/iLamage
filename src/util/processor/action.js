@@ -1,6 +1,7 @@
 import os from 'os'
 import path from 'path'
 import Process from 'child_process'
+import logger from '../logger'
 
 const ipc = require('electron').ipcRenderer
 
@@ -56,15 +57,20 @@ export default class Action {
   // util
 
   static bin(exec) {
+    logger.info('action.bin', `Looking for binary: ${exec}`)
+
     var pf = getOsInfo()
+    logger.info('action.bin', `Platform: ${pf}`)
 
     let bin
     if (process.env.NODE_ENV === 'development') {
       // 开发模式：使用 public/bin/
       bin = path.join(process.cwd(), 'public', 'bin', pf, exec)
+      logger.info('action.bin', `Development mode, using: ${bin}`)
     } else {
       // 打包后：使用 getBasePath() 延迟获取路径
       const appPath = getBasePath()
+      logger.info('action.bin', `App path: ${appPath}`)
 
       // 尝试多个可能的路径
       const possiblePaths = [
@@ -73,20 +79,27 @@ export default class Action {
         path.join(path.dirname(appPath), 'bin', pf, exec)  // 与 app 同级的 bin/
       ]
 
+      logger.info('action.bin', `Trying paths:`, possiblePaths)
+
       const fs = require('fs-extra')
       for (const testPath of possiblePaths) {
         const testExec = pf === 'win32' || pf === 'win64' ? testPath + '.exe' : testPath
+        logger.info('action.bin', `Checking: ${testExec}`)
+
         if (fs.existsSync(testExec)) {
           bin = testPath
-          console.log('[action.bin] Found binary at:', testExec)
+          logger.info('action.bin', `Found binary at: ${testExec}`)
           break
+        } else {
+          logger.warn('action.bin', `Not found: ${testExec}`)
         }
       }
 
       if (!bin) {
-        console.error('[action.bin] Binary not found:', exec)
-        console.error('[action.bin] Tried paths:', possiblePaths)
+        logger.error('action.bin', `Binary not found: ${exec}`)
+        logger.error('action.bin', `Tried paths:`, possiblePaths)
         bin = path.join(appPath, 'bin', pf, exec)  // 降级到默认路径
+        logger.warn('action.bin', `Using fallback path: ${bin}`)
       }
     }
 

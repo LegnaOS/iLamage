@@ -52,8 +52,16 @@ export default function (item, store, locale) {
 
     logger.info('apng2gif', '=== APNG to GIF Complete ===')
   }).catch(err => {
-    logger.error('apng2gif', 'apng2gif binary failed:', err.message)
-    logger.error('apng2gif', 'Stack:', err.stack)
+    logger.error('apng2gif', 'apng2gif binary failed')
+    logger.error('apng2gif', 'Error object:', JSON.stringify(err, null, 2))
+
+    if (err.command) {
+      logger.error('apng2gif', 'Command:', err.command)
+    }
+    if (err.err) {
+      logger.error('apng2gif', 'Error details:', err.err)
+    }
+
     throw err
   })
 }
