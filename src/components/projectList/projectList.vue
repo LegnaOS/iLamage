@@ -1,9 +1,39 @@
 <template>
 <section class="mod-list">
   <template v-for="(project,index) in projectList">
-    <div class="item" @click.exact="!$event.metaKey && itemClick(project.basic,index)" @click.meta="multiSelect(index)" v-bind:class="{active:project.isSelected}" v-if="sortType.indexOf(project.basic.type) != -1" :data-index="index" :key="project.id" @contextmenu="itemRightClick(project.basic,index)">
+    <div class="item" @click.exact="handleClick($event, index)" @click.meta="multiSelect(index)" @click.shift="rangeSelect(index)" v-bind:class="{active:project.isSelected}" v-if="sortType.indexOf(project.basic.type) != -1" :data-index="index" :key="project.id" @contextmenu="itemRightClick(project.basic,index)">
       <div class="thumb">
-        <img :src="'file://'+project.basic.fileList[0]" />
+        <img v-if="project.basic.type !== 'LOTTIE' && project.basic.type !== 'SVGA' && project.basic.type !== 'WEBM' && project.basic.type !== 'VAP' && project.basic.type !== 'PAG'" :src="'file://'+project.basic.fileList[0]" />
+        <div v-else-if="project.basic.type === 'LOTTIE'" class="lottie-placeholder">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#409EFF" opacity="0.1"/>
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#409EFF" font-weight="bold">Lottie</text>
+          </svg>
+        </div>
+        <div v-else-if="project.basic.type === 'SVGA'" class="svga-placeholder">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#67C23A" opacity="0.1"/>
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#67C23A" font-weight="bold">SVGA</text>
+          </svg>
+        </div>
+        <div v-else-if="project.basic.type === 'WEBM'" class="webm-placeholder">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#E6A23C" opacity="0.1"/>
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#E6A23C" font-weight="bold">WebM</text>
+          </svg>
+        </div>
+        <div v-else-if="project.basic.type === 'VAP'" class="vap-placeholder">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#F56C6C" opacity="0.1"/>
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#F56C6C" font-weight="bold">VAP</text>
+          </svg>
+        </div>
+        <div v-else-if="project.basic.type === 'PAG'" class="pag-placeholder">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#909399" opacity="0.1"/>
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#909399" font-weight="bold">PAG</text>
+          </svg>
+        </div>
       </div>
       <div class="info">
         <div class="input">
@@ -23,7 +53,7 @@
     </div>
   </template>
   <dialay-dialog v-if="dialogFormVisible" :project="delayProject" @close="dialogFormVisible=false"></dialay-dialog>
-  <div class="open-folder" v-on:click="openFolder">
+  <div class="open-folder" @click="openFolder">
     打开目录...
   </div>
 </section>
@@ -40,7 +70,7 @@ const imgType = _.values(typeData).join(',')
 // console.log(imgType)
 
 const ipc = require('electron').ipcRenderer
-const {dialog} = require('electron').remote
+const {dialog} = require('@electron/remote')
 import DelayDialog from  '../delayDialog/index.vue'
 import { f as fsOperate } from '../drag/file.js'
 export default {
@@ -52,7 +82,8 @@ export default {
       // projectList: []
       sortType: imgType,
       dialogFormVisible:false,
-      delayProject:null
+      delayProject:null,
+      lastClickedIndex: -1  // 记录上次点击的索引，用于 Shift 范围选择
     }
   },
 
@@ -122,7 +153,18 @@ export default {
       var labelMap = {
         'PNGs': 'primary',
         'APNG': 'success',
-        'GIF': 'warning'
+        'GIF': 'warning',
+        'WEBP': 'danger',
+        'AVIF': 'success',
+        'MP4': 'info',
+        'MOV': 'info',
+        'MPEG': 'warning',
+        'FLV': 'danger',
+        'LOTTIE': 'info',
+        'SVGA': 'success',
+        'WEBM': 'warning',
+        'VAP': 'danger',
+        'PAG': 'primary'
       }
       // console.log(label)
       return labelMap[label]
@@ -159,7 +201,13 @@ export default {
           return schedule * 100
       }
     },
-    // 按下command多选
+    // 处理普通点击（没有修饰键）
+    handleClick (event, index) {
+      if (!event.metaKey && !event.ctrlKey && !event.shiftKey) {
+        this.itemClick(index)
+      }
+    },
+    // 按下 Cmd/Ctrl 多选
     multiSelect (index) {
       // console.log("multi")
       if (this.selectedList.length == 1 && this.selectedIndex == index) {
@@ -167,10 +215,27 @@ export default {
         return false
       }
       this.$store.dispatch('multiSelect', index)
+      this.lastClickedIndex = index
     },
-    itemClick (project, index) {
+    // 按下 Shift 范围选择
+    rangeSelect (index) {
+      if (this.lastClickedIndex === -1) {
+        // 如果没有上次点击的索引，就当作普通点击
+        this.itemClick(index)
+      } else {
+        // 范围选择
+        this.$store.dispatch('rangeSelect', {
+          startIndex: this.lastClickedIndex,
+          endIndex: index
+        })
+      }
+      this.lastClickedIndex = index
+    },
+    // 单选
+    itemClick (index) {
       // console.log("single")
       this.$store.dispatch('singleSelect', index)
+      this.lastClickedIndex = index
     },
     itemRightClick (currentItem, index) {
       // console.log(rightMenu)
@@ -195,9 +260,26 @@ export default {
       ipc.send('change-item-fold', outputPath, index)
     },
     openFolder(){
-      dialog.showOpenDialog({ properties: [ 'openFile', 'openDirectory', 'multiSelections' ]}, (res) => {
-        this.muFileList = res
-        if(!this.muFileList){return false;}
+      dialog.showOpenDialog({
+        properties: [ 'openFile', 'openDirectory', 'multiSelections' ],
+        filters: [
+          { name: 'All Supported Formats', extensions: ['png', 'gif', 'webp', 'mp4', 'json', 'lottie', 'svga', 'webm', 'pag'] },
+          { name: 'Images', extensions: ['png', 'gif', 'webp'] },
+          { name: 'Video (MP4/VAP)', extensions: ['mp4'] },
+          { name: 'Lottie', extensions: ['json', 'lottie'] },
+          { name: 'SVGA', extensions: ['svga'] },
+          { name: 'WebM', extensions: ['webm'] },
+          { name: 'PAG', extensions: ['pag'] },
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      }).then((result) => {
+        if (result.canceled) {
+          return false;
+        }
+        this.muFileList = result.filePaths
+        if(!this.muFileList || this.muFileList.length === 0){
+          return false;
+        }
         fsOperate.readerFiles(this.muFileList).then((ars) => {
           var Obj = {}
           for (var i in ars) {

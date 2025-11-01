@@ -5,12 +5,31 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>iSparta</title>
+  <title>iLamage</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+  <script>
+    // 全局错误处理：过滤 WebAV OPFS 缓存错误（不影响功能）
+    window.addEventListener('error', function(event) {
+      if (event.message && event.message.includes('state cached in an interface object')) {
+        console.warn('[Ignored] OPFS cache error:', event.message);
+        event.preventDefault();
+        return false;
+      }
+    });
+
+    window.addEventListener('unhandledrejection', function(event) {
+      if (event.reason && event.reason.message && event.reason.message.includes('state cached in an interface object')) {
+        console.warn('[Ignored] OPFS cache error (Promise):', event.reason.message);
+        event.preventDefault();
+        return false;
+      }
+    });
+  </script>
 </head>
 
 <body>
   <noscript>
-    <strong>We're sorry but iSparta doesn't work properly without JavaScript enabled. Please enable it to
+    <strong>We're sorry but iLamage doesn't work properly without JavaScript enabled. Please enable it to
       continue.</strong>
   </noscript>
   <div id="app"></div>

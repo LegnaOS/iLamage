@@ -35,5 +35,11 @@ export const SET_SELECTED = 'SET_SELECTED'
 // 设置全选
 export const ALL_SELECTED = 'ALL_SELECTED'
 
+// 设置范围选择（Shift）
+export const RANGE_SELECT = 'RANGE_SELECT'
+
 // 设置锁定
 export const SET_LOCK = 'SET_LOCK'
+
+// 设置取消标志
+export const SET_CANCELLED = 'SET_CANCELLED'

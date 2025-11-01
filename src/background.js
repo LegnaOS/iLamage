@@ -1,10 +1,15 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain,dialog } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import {
   createProtocol,
   installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib'
+
+// 启用 @electron/remote
+const remoteMain = require('@electron/remote/main')
+remoteMain.initialize()
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const path = require("path");
 // Keep a global reference of the window object, if you don't, the window will
@@ -22,22 +27,27 @@ function createWindow () {
     minWidth: 820,
     minHeight: 800,
     width: 820,
-    height: 800, 
+    height: 800,
     icon:path.join(__static,"icons/icon.icns"),
-    title:"iSparta",
+    title:"iLamage",
     show: false,
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
       webSecurity: false
     } })
-  
+
+  // 为窗口启用 @electron/remote
+  remoteMain.enable(win.webContents)
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
     if (!process.env.IS_TEST) win.webContents.openDevTools()
   } else {
     createProtocol('app')
-    
+
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
   }
@@ -48,6 +58,99 @@ function createWindow () {
   win.once('ready-to-show', () => {
     win.show()
   })
+
+  // 设置应用菜单以支持快捷键
+  createMenu()
+}
+
+function createMenu() {
+  const isMac = process.platform === 'darwin'
+
+  const template = [
+    // macOS 应用菜单
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    }] : []),
+
+    // 编辑菜单
+    {
+      label: '编辑',
+      submenu: [
+        { role: 'undo', label: '撤销' },
+        { role: 'redo', label: '重做' },
+        { type: 'separator' },
+        { role: 'cut', label: '剪切' },
+        { role: 'copy', label: '复制' },
+        { role: 'paste', label: '粘贴' },
+        { type: 'separator' },
+        {
+          label: '全选',
+          accelerator: 'CmdOrCtrl+A',
+          click: () => {
+            if (win) {
+              win.webContents.send('selectAll')
+            }
+          }
+        },
+        {
+          label: '删除',
+          accelerator: 'CmdOrCtrl+Backspace',
+          click: () => {
+            if (win) {
+              win.webContents.send('delItem')
+            }
+          }
+        }
+      ]
+    },
+
+    // 视图菜单
+    {
+      label: '视图',
+      submenu: [
+        { role: 'reload', label: '重新加载' },
+        { role: 'forceReload', label: '强制重新加载' },
+        { role: 'toggleDevTools', label: '开发者工具' },
+        { type: 'separator' },
+        { role: 'resetZoom', label: '实际大小' },
+        { role: 'zoomIn', label: '放大' },
+        { role: 'zoomOut', label: '缩小' },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: '全屏' }
+      ]
+    },
+
+    // 窗口菜单
+    {
+      label: '窗口',
+      submenu: [
+        { role: 'minimize', label: '最小化' },
+        { role: 'zoom', label: '缩放' },
+        ...(isMac ? [
+          { type: 'separator' },
+          { role: 'front', label: '前置所有窗口' },
+          { type: 'separator' },
+          { role: 'window', label: '窗口' }
+        ] : [
+          { role: 'close', label: '关闭' }
+        ])
+      ]
+    }
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
 }
 
 // Quit when all windows are closed.

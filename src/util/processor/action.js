@@ -9,7 +9,10 @@ ipc.on('got-app-path', function(event, path) {
   basePath = path
 })
 
-const tmpDir = path.join(os.tmpdir(), 'iSparta')
+const tmpDir = path.join(os.tmpdir(), 'iLamage')
+
+// 全局进程管理器 - 使用 Set 存储所有正在运行的进程
+const runningProcesses = new Set()
 
 export default class Action {
   constructor(state) {
@@ -38,18 +41,23 @@ export default class Action {
   static bin(exec) {
     var pf = getOsInfo()
     // console.log(process.env)
-    
+
     if (process.env.NODE_ENV == 'development') {
       var bin = path.join(process.cwd(), '/public/bin/', pf, exec)
     } else {
       var bin = path.join(basePath, '/bin/', pf, exec)
     }
-    Process.exec("chmod -R +x " +bin);
+
+    // chmod 只在 Unix 系统上执行（macOS/Linux）
+    if (pf !== 'win32' && pf !== 'win64') {
+      Process.exec("chmod -R +x " + bin);
+    }
+
     if (pf == 'win32' || pf == 'win64') {
       bin = bin + '.exe'
     }
     bin = "\""+bin+"\"";
-    
+
     return bin
   }
   // add 0 to num
@@ -66,12 +74,30 @@ export default class Action {
       var execCommand = args
       execCommand.unshift(command)
       execCommand = execCommand.join(' ')
-      
+
       if (callback) {
-        Process.exec(execCommand, callback)
+        const childProcess = Process.exec(execCommand, callback)
+        runningProcesses.add(childProcess)
+        console.log(`[Process Manager] Started process (total: ${runningProcesses.size}):`, execCommand.substring(0, 100))
       } else {
-        Process.exec(execCommand, function(err, stdout, stderr) {
+        const childProcess = Process.exec(execCommand, function(err, stdout, stderr) {
+          // 清理进程记录
+          runningProcesses.delete(childProcess)
+          console.log(`[Process Manager] Process finished (remaining: ${runningProcesses.size})`)
+
           if (err) {
+            // 检查是否是用户取消
+            if (err.killed || err.signal === 'SIGTERM' || err.signal === 'SIGKILL') {
+              console.log('[Process Manager] Process cancelled by user:', execCommand.substring(0, 100))
+              // 不更新状态，因为 cancelAllTasks 已经更新了
+              reject({
+                command: execCommand,
+                err: err,
+                cancelled: true
+              })
+              return
+            }
+
             console.log('this command error:' + execCommand);
             console.log('stdout: ' + stdout)
             console.log('stderr: ' + stderr)
@@ -81,7 +107,6 @@ export default class Action {
               text: locale.convertFail,
               schedule: -1
             })
-            store.dispatch('setLock', false)
             reject({
               command: execCommand,
               err: err
@@ -92,8 +117,30 @@ export default class Action {
             })
           }
         })
+
+        // 保存进程引用
+        runningProcesses.add(childProcess)
+        console.log(`[Process Manager] Started process (total: ${runningProcesses.size}):`, execCommand.substring(0, 100))
       }
     })
+  }
+
+  // 取消所有正在运行的进程
+  static cancelAllTasks() {
+    const count = runningProcesses.size
+    console.log(`[Process Manager] Killing ${count} running processes`)
+
+    runningProcesses.forEach((childProcess) => {
+      try {
+        childProcess.kill('SIGTERM')
+        console.log(`[Process Manager] Sent SIGTERM to process ${childProcess.pid}`)
+      } catch (err) {
+        console.warn(`[Process Manager] Failed to kill process:`, err)
+      }
+    })
+
+    runningProcesses.clear()
+    return count
   }
 }
 

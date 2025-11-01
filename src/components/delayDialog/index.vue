@@ -33,7 +33,7 @@ import typeData from '../../store/enum/type'
 const imgType = _.values(typeData).join(',')
 
 const ipc = require('electron').ipcRenderer
-const {dialog} = require('electron').remote
+const {dialog} = require('@electron/remote')
 import { f as fsOperate } from '../drag/file.js'
 export default {
   props:{

@@ -7,6 +7,7 @@
 .mod-list {
 
     min-height: 100px;
+    padding-bottom: 100px; // 为底部筛选器预留空间（最多 3 行）
     .item {
         position: relative;
         padding: 16px;
@@ -27,6 +28,18 @@
             img {
                 width: 100%;
                 height: 100%;
+            }
+            .lottie-placeholder,
+            .svga-placeholder {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                svg {
+                    width: 100%;
+                    height: 100%;
+                }
             }
         }
         .info {

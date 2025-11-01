@@ -1,12 +1,7 @@
 <template>
 <section class="mod-setting" v-if="curtSetting">
   <h3 class="ui-border-t">{{ $t("outputConfig") }}</h3>
-  <section class="mod-multi" v-if="curtSetting.length">
-    <p>{{ $t("multiText") }}</p>
-    <el-button type="primary" v-on:click="start('')" :disabled="isStarted">&ensp;{{ $t("batchStart") }}&ensp;</el-button>
-    <el-button type="primary" v-on:click="changeOutput" :disabled="isStarted">{{ $t("outputTofolder") }}</el-button>
-  </section>
-  <section class="mod-form" v-else>
+  <section class="mod-form">
     <div class="ui-border-b" v-if="showFrame">
       <el-form label-width="">
         <el-form-item :label="$t('fps')">
@@ -18,30 +13,39 @@
         </el-form-item>
       </el-form>
     </div>
-    <div class="ui-border-b mod-output">
+    <div class="ui-border-b mod-output" v-if="!isMultiSelected">
       <el-form label-width="">
         <el-form-item  :label="$t('outputName')" class="suffix">
-          <el-input v-model="outputName" size="mini" placeholder="output-ispt"></el-input>
+          <el-input v-model="outputName" size="mini" placeholder="output-ilam"></el-input>
         </el-form-item>
-        <p>{{ $t("outputFormat") }}</p>
-        <el-checkbox-group v-model="formatList" :min="1">
-          <el-checkbox v-for="format in formatStatic" :label="format" :key="format">{{format}}</el-checkbox>
-        </el-checkbox-group>
       </el-form>
+    </div>
+    <div class="ui-border-b mod-output">
+      <p>{{ $t("outputFormat") }}</p>
+      <el-checkbox-group v-model="formatList" :min="1">
+        <el-checkbox v-for="format in formatStatic" :label="format" :key="format">{{format}}</el-checkbox>
+      </el-checkbox-group>
     </div>
     <div class="ui-border-b mod-quality">
       <p>{{ $t("compressionQuality") }}</p>
       <el-form :inline="true">
         <el-form-item class="mr-5">
-          <el-checkbox v-model="qualityCheck">Quality</el-checkbox>
-        </el-form-item> 
+          <el-checkbox v-model="qualityCheck">{{ $t('quality') }}</el-checkbox>
+        </el-form-item>
         <el-form-item>
-          <el-input v-model.number="quality" type="number" size="mini" placeholder="100" @blur="qualityBlur"></el-input>
-          <i>(0-100)</i>
+          <el-input v-model.number="quality" type="number" size="mini" placeholder="70" @blur="qualityBlur"></el-input>
+          <i>(0-100, {{ $t('qualityTips') }})</i>
         </el-form-item>
       </el-form>
     </div>
-    <el-button type="primary" v-on:click="start('')" :disabled="isStarted">&emsp;{{ $t("start") }}&emsp;</el-button>
+    <div v-if="isMultiSelected" class="mod-multi">
+      <p>{{ $t("multiText") }}</p>
+      <el-button type="primary" v-on:click="changeOutput" :disabled="isStarted">{{ $t("outputTofolder") }}</el-button>
+    </div>
+    <div class="mod-actions">
+      <el-button type="primary" v-on:click="start('')" :disabled="isStarted">&emsp;{{ $t("start") }}&emsp;</el-button>
+      <el-button type="danger" v-if="isStarted" v-on:click="stopAll" size="small">{{ $t("stop") }}</el-button>
+    </div>
   </section>
   <section class="mod-toolbox">
     <i class="el-icon-delete" v-on:click="onDeleteAll()"></i>
@@ -70,6 +74,9 @@ export default {
       var selectedList = this.$store.getters.getterSelected
       return selectedList
     },
+    isMultiSelected () {
+      return this.selectedList.length > 1
+    },
     curtSetting () {
       if (this.selectedList.length == 0) {
         return false
@@ -79,8 +86,8 @@ export default {
         // console.log(selectedData);
         return selectedData
       } else {
-        // 多选
-        return this.selectedList
+        // 多选 - 返回第一个项目的 options（用于显示）
+        return this.selectedList[0].options
       }
     },
     isStarted () {
@@ -99,11 +106,8 @@ export default {
       }
     },
     formatStatic () {
-      if (this.selectedList[0].basic.type == 'GIF') {
-        return ['APNG', 'WEBP']
-      } else {
-        return ['APNG', 'GIF', 'WEBP']
-      }
+      // 返回所有可用的输出格式（不做任何互斥或隐藏）
+      return ['APNG', 'GIF', 'WEBP', 'PNG序列帧', 'JPG序列帧']
     },
     frameRate: {
       get () {
@@ -140,13 +144,32 @@ export default {
     },
     formatList: {
       get () {
-        // console.warn(this.curtSetting.outputFormat)
-        return this.curtSetting.outputFormat
+        // 将内部格式转换为显示格式
+        const internalFormats = this.curtSetting.outputFormat
+        return internalFormats.map(format => {
+          if (format === 'PNG_SEQ') return 'PNG序列帧'
+          if (format === 'JPG_SEQ') return 'JPG序列帧'
+          return format
+        })
       },
       set (value) {
-        this.$store.dispatch('editOptions', {
-          outputFormat: value
+        // 将显示格式转换为内部格式
+        const internalFormats = value.map(format => {
+          if (format === 'PNG序列帧') return 'PNG_SEQ'
+          if (format === 'JPG序列帧') return 'JPG_SEQ'
+          return format
         })
+
+        // 批量修改或单个修改
+        if (this.isMultiSelected) {
+          this.$store.dispatch('editMultiOptions', {
+            outputFormat: internalFormats
+          })
+        } else {
+          this.$store.dispatch('editOptions', {
+            outputFormat: internalFormats
+          })
+        }
       }
     },
     qualityCheck: {
@@ -210,6 +233,16 @@ export default {
     },
     onDeleteAll:function(){
       this.$store.dispatch('removeAll')
+    },
+    stopAll:function(){
+      console.log('[UI] Stop button clicked')
+      // 停止所有正在执行的任务
+      this.$store.dispatch('cancelAllTasks')
+      this.$message({
+        message: this.$t('tasksCancelled') || '已停止所有任务',
+        type: 'warning',
+        duration: 3000
+      })
     }
   },
   watch: {

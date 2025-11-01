@@ -1,4 +1,4 @@
-appId: io.github.isparta
+appId: io.github.ilamage
 asar: false
 publish:
   - provider: github

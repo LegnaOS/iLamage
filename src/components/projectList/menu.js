@@ -1,7 +1,7 @@
 // 右键菜单
 // import processor from '../../util/processor'
 
-const remote = require('electron').remote
+const remote = require('@electron/remote')
 const shell = require('electron').shell
 const ipc = require('electron').ipcRenderer
 const {
