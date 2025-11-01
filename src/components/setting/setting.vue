@@ -45,6 +45,7 @@
     <div class="mod-actions">
       <el-button type="primary" v-on:click="start('')" :disabled="isStarted">&emsp;{{ $t("start") }}&emsp;</el-button>
       <el-button type="danger" v-if="isStarted" v-on:click="stopAll" size="small">{{ $t("stop") }}</el-button>
+      <el-button type="info" v-on:click="showLogFile" size="small" v-if="!isDev">View Log</el-button>
     </div>
   </section>
   <section class="mod-toolbox">
@@ -70,6 +71,9 @@ export default {
     })
   },
   computed: {
+    isDev () {
+      return process.env.NODE_ENV === 'development'
+    },
     selectedList () {
       var selectedList = this.$store.getters.getterSelected
       return selectedList
@@ -215,6 +219,19 @@ export default {
       var outputPath = this.selectedList[0].basic.outputPath
       // console.log(outputPath)
       ipc.send('change-multiItem-fold', outputPath)
+    },
+    showLogFile: function () {
+      const logger = require('../../util/logger').default
+      const { shell } = require('electron')
+      const logFile = logger.getLogFile()
+      const logDir = logger.getLogDir()
+
+      this.$alert(`Log file: ${logFile}`, 'Debug Log', {
+        confirmButtonText: 'Open Folder',
+        callback: () => {
+          shell.showItemInFolder(logFile)
+        }
+      })
     },
     start: function (sameOutputPath) {
       // console.log(sameOutputPath)

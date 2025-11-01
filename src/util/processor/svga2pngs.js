@@ -14,8 +14,13 @@ import fs from 'fs-extra'
 import path from 'path'
 import action from './action'
 import SVGA from 'svgaplayerweb'
+import logger from '../logger'
 
 export default function (item, store, locale) {
+  logger.info('svga2pngs', '=== SVGA Processing Start ===')
+  logger.info('svga2pngs', 'File:', item.basic.fileList[0])
+  logger.info('svga2pngs', 'Output formats:', item.options.outputFormat)
+
   store.dispatch('editProcess', {
     index: item.index,
     text: locale.analysing + '...',
@@ -23,10 +28,12 @@ export default function (item, store, locale) {
   })
 
   const svgaFile = item.basic.fileList[0]
+  logger.info('svga2pngs', 'SVGA file exists:', fs.existsSync(svgaFile))
 
   // 创建临时目录
   const tmpDir = item.basic.tmpDir
   fs.ensureDirSync(tmpDir)
+  logger.info('svga2pngs', 'Temp dir:', tmpDir)
 
   // 创建一个 DIV 容器用于渲染（SVGA Player 需要 DIV，会自己创建 Canvas）
   // 注意：Canvas 必须在 DOM 中且不能完全透明才能正确渲染！
@@ -45,23 +52,27 @@ export default function (item, store, locale) {
   // 加载 SVGA 文件
   // 方法：读取文件 → Blob → Blob URL → parser.load
   return fs.readFile(svgaFile).then((buffer) => {
+    logger.info('svga2pngs', 'File read, size:', buffer.length, 'bytes')
+
     // 创建 Blob
     const blob = new Blob([buffer], { type: 'application/octet-stream' })
     const blobUrl = URL.createObjectURL(blob)
 
-    console.log('Created Blob URL for SVGA:', blobUrl)
+    logger.info('svga2pngs', 'Created Blob URL:', blobUrl)
 
     return new Promise((resolve, reject) => {
       parser.load(blobUrl, (videoItem) => {
+        logger.info('svga2pngs', 'SVGA loaded successfully')
         URL.revokeObjectURL(blobUrl)  // 清理 Blob URL
         resolve(videoItem)
       }, (error) => {
+        logger.error('svga2pngs', 'SVGA load failed:', error)
         URL.revokeObjectURL(blobUrl)  // 清理 Blob URL
         reject(error)
       })
     })
   }).then((videoItem) => {
-    console.log('SVGA animation loaded:', videoItem)
+    logger.info('svga2pngs', 'SVGA animation loaded, frames:', videoItem.frames, 'FPS:', videoItem.FPS)
 
     // 获取动画信息
     const frameRate = item.options.frameRate || videoItem.FPS || 24
@@ -186,7 +197,7 @@ export default function (item, store, locale) {
     document.body.removeChild(container)
     player.clear()
 
-    console.log(`Rendered ${totalFrames} frames from SVGA`)
+    logger.info('svga2pngs', `Rendered ${totalFrames} frames from SVGA`)
 
     // 更新 fileList 为 PNG 序列
     // 注意：SVGA Player 的 onFrame frameIndex 从 0 开始，但文件名从 1 开始（与其他模块一致）
@@ -198,6 +209,10 @@ export default function (item, store, locale) {
       )
     }
 
+    logger.info('svga2pngs', 'Generated fileList:', item.basic.fileList.length, 'files')
+    logger.info('svga2pngs', 'First file:', item.basic.fileList[0])
+    logger.info('svga2pngs', 'Last file:', item.basic.fileList[item.basic.fileList.length - 1])
+
     // 更新类型为 PNGs，这样后续流程会自动处理
     item.basic.type = 'PNGs'
 
@@ -206,10 +221,14 @@ export default function (item, store, locale) {
     const frameDelay = 1 / frameRate  // 秒
     item.options.delays = new Array(totalFrames).fill(frameDelay)
 
-    console.log(`Set frame delay: ${frameDelay}s (${frameRate}fps) for ${totalFrames} frames`)
+    logger.info('svga2pngs', `Set frame delay: ${frameDelay}s (${frameRate}fps) for ${totalFrames} frames`)
+    logger.info('svga2pngs', '=== SVGA Processing Complete ===')
 
     return Promise.resolve()
   }).catch((err) => {
+    logger.error('svga2pngs', 'SVGA processing failed:', err.message)
+    logger.error('svga2pngs', 'Stack:', err.stack)
+
     // 清理 DOM
     if (container.parentNode) {
       document.body.removeChild(container)

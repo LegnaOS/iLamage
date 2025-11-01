@@ -3,6 +3,7 @@ import path from 'path'
 import action from './action'
 import apngCompress from './apngCompress'
 import TYPE 		from '../../store/enum/type'
+import logger from '../logger'
 
 /**
  * 检查并修复帧尺寸不一致的问题
@@ -134,6 +135,10 @@ async function checkAndFixFrameSizes(fileList, tmpDir) {
 }
 
 export default function (item, store, locale) {
+  logger.info('apng2webp', '=== APNG to WEBP Start ===')
+  logger.info('apng2webp', 'Input file:', item.basic.fileList[0])
+  logger.info('apng2webp', 'Has originalFileList:', !!item.basic.originalFileList)
+
   store.dispatch('editProcess', {
     index: item.index,
     text: locale.outputing+' WEBP...',
@@ -146,9 +151,9 @@ export default function (item, store, locale) {
   const hasOriginalPNGs = item.basic.originalFileList && item.basic.originalFileList.length > 0
 
   if (hasOriginalPNGs) {
-    console.log(`[apng2webp] Using existing PNG sequence (${item.basic.originalFileList.length} frames), skipping apngdis...`)
-    console.log(`[apng2webp] First 5 files:`, item.basic.originalFileList.slice(0, 5))
-    console.log(`[apng2webp] Last 5 files:`, item.basic.originalFileList.slice(-5))
+    logger.info('apng2webp', `Using existing PNG sequence (${item.basic.originalFileList.length} frames), skipping apngdis...`)
+    logger.info('apng2webp', `First file:`, item.basic.originalFileList[0])
+    logger.info('apng2webp', `Last file:`, item.basic.originalFileList[item.basic.originalFileList.length - 1])
 
     // 检查帧尺寸是否一致
     return checkAndFixFrameSizes(item.basic.originalFileList, tmpDir).then((fixedFiles) => {

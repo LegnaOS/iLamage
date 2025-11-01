@@ -1,8 +1,12 @@
 import path from 'path'
 import action from './action'
 import fs from 'fs-extra'
+import logger from '../logger'
 
 export default function (item, store, locale) {
+  logger.info('apng2gif', '=== APNG to GIF Start ===')
+  logger.info('apng2gif', 'Input file:', item.basic.fileList[0])
+
   store.dispatch('editProcess', {
     index: item.index,
     text: locale.outputing+' GIF...',
