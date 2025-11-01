@@ -144,18 +144,24 @@ function getVideoInfo(ffmpegPath, videoFile) {
     // 使用 ffprobe 获取视频信息（包括元数据）
     const ffprobePath = ffmpegPath.replace('ffmpeg', 'ffprobe')
 
+    // 添加 codec_type 和 codec_name 用于检测视频流
     // 添加 -show_entries stream_tags 来获取 alpha_mode 元数据
-    const command = `${ffprobePath} -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate,nb_frames,pix_fmt:stream_tags=alpha_mode:format=duration -of json "${videoFile}"`
+    const command = `${ffprobePath} -v error -select_streams v:0 -show_entries stream=codec_type,codec_name,width,height,r_frame_rate,nb_frames,pix_fmt:stream_tags=alpha_mode:format=duration -of json "${videoFile}"`
 
     exec(command, (err, stdout, stderr) => {
       if (err) {
         console.warn('[webm2pngs] ffprobe exec error:', err.message)
+        console.warn('[webm2pngs] ffprobe stderr:', stderr)
         // ffprobe 可能不存在，尝试使用 ffmpeg
         return getVideoInfoWithFFmpeg(ffmpegPath, videoFile).then(resolve).catch(reject)
       }
 
       try {
+        console.log('[webm2pngs] ffprobe raw stdout:', stdout)
+        console.log('[webm2pngs] ffprobe stderr:', stderr)
+
         const info = JSON.parse(stdout)
+        console.log('[webm2pngs] Parsed JSON:', JSON.stringify(info, null, 2))
 
         // 检查 streams 是否存在
         if (!info.streams || info.streams.length === 0) {
@@ -163,17 +169,26 @@ function getVideoInfo(ffmpegPath, videoFile) {
           return getVideoInfoWithFFmpeg(ffmpegPath, videoFile).then(resolve).catch(reject)
         }
 
+        console.log('[webm2pngs] Found', info.streams.length, 'streams')
+        info.streams.forEach((s, i) => {
+          console.log(`[webm2pngs] Stream ${i}:`, s.codec_type, s.codec_name, s.width, s.height)
+        })
+
         // 查找视频流（codec_type === 'video'）
         const videoStream = info.streams.find(s => s.codec_type === 'video')
 
         if (!videoStream) {
           // 没有视频流，检查是否是纯音频文件
           const audioStream = info.streams.find(s => s.codec_type === 'audio')
+          console.error('[webm2pngs] No video stream found!')
+          console.error('[webm2pngs] All streams:', info.streams.map(s => s.codec_type))
           if (audioStream) {
             return reject(new Error('This file contains only audio, no video stream found. Please select a video file.'))
           }
           return reject(new Error('No video stream found in this file.'))
         }
+
+        console.log('[webm2pngs] Using video stream:', videoStream.codec_name, videoStream.width, videoStream.height)
 
         const stream = videoStream
         const format = info.format
