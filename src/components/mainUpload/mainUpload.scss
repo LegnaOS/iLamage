@@ -2,7 +2,7 @@
   width: 360px;
   height: 224px;
   position: absolute;
-    left: 50%; 
+    left: 50%;
     top: 50%;
     transform: translate(-50%,-60%);
 }
@@ -19,6 +19,20 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%,-60%);
+  }
+
+  // 确保上传图标可见
+  .el-icon-upload {
+    font-size: 67px;
+    color: #C0C4CC;
+    margin: 40px 0 16px;
+    line-height: 50px;
+  }
+
+  .el-upload__text {
+    color: #606266;
+    font-size: 14px;
+    text-align: center;
   }
 }
 .el-upload__tip{

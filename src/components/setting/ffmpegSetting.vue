@@ -50,9 +50,9 @@
         <el-form label-width="120px" size="small">
           <!-- 系统 FFmpeg -->
           <el-form-item :label="$t('systemFFmpeg')">
-            <div class="status-row">
+            <div class="status-column">
               <!-- FFmpeg 状态 -->
-              <div class="tool-status">
+              <div class="tool-row">
                 <span class="tool-label">ffmpeg:</span>
                 <el-tag v-if="systemFFmpeg.found" type="success" size="mini">
                   <i class="el-icon-success"></i> {{ $t("statusFound") }}
@@ -64,7 +64,7 @@
               </div>
 
               <!-- ffprobe 状态 -->
-              <div class="tool-status">
+              <div class="tool-row">
                 <span class="tool-label">ffprobe:</span>
                 <el-tag v-if="systemFFprobe.found" type="success" size="mini">
                   <i class="el-icon-success"></i> {{ $t("statusFound") }}
@@ -75,22 +75,25 @@
                 <span v-if="systemFFprobe.path" class="path-text">{{ systemFFprobe.path }}</span>
               </div>
 
-              <el-button
-                type="text"
-                size="mini"
-                @click="detectSystemFFmpeg"
-                :loading="detecting"
-              >
-                <i class="el-icon-refresh"></i> {{ $t("redetect") }}
-              </el-button>
+              <!-- 操作按钮 -->
+              <div class="action-row">
+                <el-button
+                  type="text"
+                  size="mini"
+                  @click="detectSystemFFmpeg"
+                  :loading="detecting"
+                >
+                  <i class="el-icon-refresh"></i> {{ $t("redetect") }}
+                </el-button>
+              </div>
             </div>
           </el-form-item>
 
           <!-- 内置 FFmpeg / ffprobe -->
           <el-form-item :label="$t('builtinTools')">
-            <div class="status-row">
+            <div class="status-column">
               <!-- FFmpeg 状态 -->
-              <div class="tool-status">
+              <div class="tool-row">
                 <span class="tool-label">ffmpeg:</span>
                 <el-tag v-if="builtinFFmpeg.found" type="success" size="mini">
                   <i class="el-icon-success"></i> {{ $t("statusInstalled") }}
@@ -101,7 +104,7 @@
               </div>
 
               <!-- ffprobe 状态 -->
-              <div class="tool-status">
+              <div class="tool-row">
                 <span class="tool-label">ffprobe:</span>
                 <el-tag v-if="builtinFFprobe.found" type="success" size="mini">
                   <i class="el-icon-success"></i> {{ $t("statusInstalled") }}
@@ -112,36 +115,40 @@
               </div>
 
               <!-- 路径显示 -->
-              <span v-if="builtinFFmpeg.path" class="path-text">{{ getFFmpegDir(builtinFFmpeg.path) }}</span>
+              <div v-if="builtinFFmpeg.path" class="tool-row">
+                <span class="path-text">{{ getFFmpegDir(builtinFFmpeg.path) }}</span>
+              </div>
 
               <!-- 操作按钮 -->
-              <el-button
-                v-if="builtinFFmpeg.found"
-                type="text"
-                size="mini"
-                @click="openFFmpegDir"
-                icon="el-icon-folder-opened"
-              >
-                {{ $t('open') }}
-              </el-button>
-              <el-button
-                v-if="!builtinFFmpeg.found"
-                type="primary"
-                size="mini"
-                @click="downloadFFmpeg"
-                :loading="downloading"
-              >
-                <i class="el-icon-download"></i> {{ $t('downloadInstall') }}
-              </el-button>
-              <el-button
-                v-if="builtinFFmpeg.found"
-                type="danger"
-                size="mini"
-                @click="removeBuiltinFFmpeg"
-                plain
-              >
-                <i class="el-icon-delete"></i> {{ $t('deleteBuiltin') }}
-              </el-button>
+              <div class="action-row">
+                <el-button
+                  v-if="builtinFFmpeg.found"
+                  type="text"
+                  size="mini"
+                  @click="openFFmpegDir"
+                  icon="el-icon-folder-opened"
+                >
+                  {{ $t('open') }}
+                </el-button>
+                <el-button
+                  v-if="!builtinFFmpeg.found"
+                  type="primary"
+                  size="mini"
+                  @click="downloadFFmpeg"
+                  :loading="downloading"
+                >
+                  <i class="el-icon-download"></i> {{ $t('downloadInstall') }}
+                </el-button>
+                <el-button
+                  v-if="builtinFFmpeg.found"
+                  type="danger"
+                  size="mini"
+                  @click="removeBuiltinFFmpeg"
+                  plain
+                >
+                  <i class="el-icon-delete"></i> {{ $t('deleteBuiltin') }}
+                </el-button>
+              </div>
             </div>
           </el-form-item>
 
@@ -801,35 +808,47 @@ export default {
   margin-bottom: 20px;
 }
 
-.status-row {
+/* 垂直布局容器 */
+.status-column {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.tool-status {
+/* 每个工具的行 */
+.tool-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  min-height: 28px;
 }
 
+/* 工具标签（ffmpeg:, ffprobe:）固定宽度 */
 .tool-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #606266;
   font-weight: 500;
+  min-width: 70px;
+  flex-shrink: 0;
 }
 
+/* 路径文本 */
 .path-text {
   color: #909399;
   font-size: 12px;
-  font-family: monospace;
-  flex: 1;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 150px;
-  max-width: 300px;
+  flex: 1;
+}
+
+/* 操作按钮行 */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .custom-path-row {

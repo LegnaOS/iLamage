@@ -19,8 +19,10 @@
     </el-dropdown-menu>
   </el-dropdown>
   <!-- Settings Button -->
-  <el-button type="text" @click="showDialog"><i class="el-icon-setting"></i></el-button>
-  <el-dialog :title="$t('defaultSetting')" :visible.sync="dialogFormVisible" v-on:open="resetVarible" :modal="true" :modal-append-to-body="true" :append-to-body="true" width="640px" :close-on-click-modal="false">
+  <el-button type="text" @click="showDialog" class="settings-button">
+    <i class="el-icon-setting"></i>
+  </el-button>
+  <el-dialog :title="$t('defaultSetting')" :visible.sync="dialogFormVisible" v-on:open="resetVarible" :modal="true" :modal-append-to-body="true" :append-to-body="true" width="900px" :close-on-click-modal="false">
     <el-tabs v-model="activeTab">
       <!-- 基础设置 -->
       <el-tab-pane :label="$t('tabBasicSettings')" name="basic">
