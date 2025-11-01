@@ -155,9 +155,6 @@ function getVideoInfo(ffmpegPath, videoFile) {
       }
 
       try {
-        console.log('[webm2pngs] ffprobe stdout:', stdout)
-        console.log('[webm2pngs] ffprobe stderr:', stderr)
-
         const info = JSON.parse(stdout)
 
         // 检查 streams 是否存在
@@ -166,7 +163,19 @@ function getVideoInfo(ffmpegPath, videoFile) {
           return getVideoInfoWithFFmpeg(ffmpegPath, videoFile).then(resolve).catch(reject)
         }
 
-        const stream = info.streams[0]
+        // 查找视频流（codec_type === 'video'）
+        const videoStream = info.streams.find(s => s.codec_type === 'video')
+
+        if (!videoStream) {
+          // 没有视频流，检查是否是纯音频文件
+          const audioStream = info.streams.find(s => s.codec_type === 'audio')
+          if (audioStream) {
+            return reject(new Error('This file contains only audio, no video stream found. Please select a video file.'))
+          }
+          return reject(new Error('No video stream found in this file.'))
+        }
+
+        const stream = videoStream
         const format = info.format
 
         // 解析帧率
@@ -222,10 +231,18 @@ function getVideoInfoWithFFmpeg(ffmpegPath, videoFile) {
     exec(command, (err, stdout, stderr) => {
       const output = stdout + stderr
 
+      // 检查是否只有音频流
+      const hasVideoStream = /Stream #\d+:\d+.*: Video:/.test(output)
+      const hasAudioStream = /Stream #\d+:\d+.*: Audio:/.test(output)
+
+      if (!hasVideoStream && hasAudioStream) {
+        return reject(new Error('This file contains only audio, no video stream found. Please select a video file.'))
+      }
+
       // 解析尺寸
       const sizeMatch = output.match(/(\d+)x(\d+)/)
       if (!sizeMatch) {
-        return reject(new Error('Could not detect video size'))
+        return reject(new Error('Could not detect video size. This may not be a valid video file.'))
       }
 
       const width = parseInt(sizeMatch[1])
