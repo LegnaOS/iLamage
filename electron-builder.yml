@@ -2,6 +2,7 @@ appId: io.github.ilamage
 asar: false
 publish:
   - provider: github
+
 win:
   target:
     - target: zip
@@ -9,12 +10,16 @@ win:
         - x64
         - ia32
   icon: ./public/icons/icon.ico
+
 mac:
   target:
-    - target: dmg
+    - target: zip
       arch:
         - x64
+        - arm64
   icon: ./public/icons/icon.icns
+  category: public.app-category.graphics-design
+
 linux:
   target:
     - target: tar.gz

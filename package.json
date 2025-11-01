@@ -9,10 +9,10 @@
   },
   "scripts": {
     "dev": "vue-cli-service electron:serve",
-    "build": "vue-cli-service electron:build -mwl",
-    "build:mac": "vue-cli-service electron:build --mac",
-    "build:windows": "vue-cli-service electron:build --windows",
-    "build:linux": "vue-cli-service electron:build --linux",
+    "build": "vue-cli-service electron:build -mwl --mac zip --win zip --linux tar.gz",
+    "build:mac": "vue-cli-service electron:build --mac zip",
+    "build:windows": "vue-cli-service electron:build --win zip",
+    "build:linux": "vue-cli-service electron:build --linux tar.gz",
     "lint": "vue-cli-service lint",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
@@ -44,6 +44,7 @@
     "@vue/cli-plugin-babel": "~5.0.8",
     "@vue/cli-plugin-eslint": "~5.0.8",
     "@vue/cli-service": "~5.0.8",
+    "cross-env": "^10.1.0",
     "electron": "^22.3.27",
     "eslint": "^8.57.1",
     "eslint-plugin-vue": "^9.28.0",
