@@ -34,6 +34,47 @@ module.exports = {
           category: 'public.app-category.graphics-design'
         },
 
+        // 打包后钩子：恢复二进制文件的执行权限
+        afterPack: async (context) => {
+          const { execSync } = require('child_process')
+          const path = require('path')
+
+          // 获取打包后的 app 路径
+          const appPath = context.appOutDir
+          const platform = context.electronPlatformName
+
+          console.log('[afterPack] Fixing binary permissions...')
+          console.log('[afterPack] App path:', appPath)
+          console.log('[afterPack] Platform:', platform)
+
+          if (platform === 'darwin') {
+            // macOS
+            const binDir = path.join(appPath, 'iLamage.app/Contents/Resources/app/bin/mac')
+            console.log('[afterPack] Binary dir:', binDir)
+
+            try {
+              execSync(`chmod -R +x "${binDir}"`)
+              console.log('[afterPack] ✅ Binary permissions fixed')
+            } catch (err) {
+              console.error('[afterPack] ❌ Failed to fix permissions:', err.message)
+            }
+          } else if (platform === 'win32') {
+            // Windows 不需要执行权限
+            console.log('[afterPack] Windows platform, skipping chmod')
+          } else if (platform === 'linux') {
+            // Linux
+            const binDir = path.join(appPath, 'resources/app/bin/linux')
+            console.log('[afterPack] Binary dir:', binDir)
+
+            try {
+              execSync(`chmod -R +x "${binDir}"`)
+              console.log('[afterPack] ✅ Binary permissions fixed')
+            } catch (err) {
+              console.error('[afterPack] ❌ Failed to fix permissions:', err.message)
+            }
+          }
+        },
+
         win: {
           target: ['nsis', 'zip'],  // 生成安装程序和压缩包
           icon: './public/icons/icon.ico'
