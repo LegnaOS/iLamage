@@ -30,8 +30,30 @@ export default function (item, store, locale) {
   const fileDir = path.dirname(item.basic.fileList[0])
   const cdCommand = isWindows ? `cd /d "${fileDir}"` : `cd "${fileDir}"`
 
+  logger.info('apng2gif', 'Executing apng2gif binary...')
+  logger.info('apng2gif', 'Working dir:', fileDir)
+  logger.info('apng2gif', 'Input:', fileName)
+  logger.info('apng2gif', 'Output:', item.options.outputName + '.gif')
+
   return action.exec(cdCommand + ' && ' + action.bin('apng2gif'), [
     fileName,
     item.options.outputName + '.gif'
-  ], item, store, locale)
+  ], item, store, locale).then(() => {
+    logger.info('apng2gif', 'apng2gif binary completed successfully')
+
+    const outputFile = path.join(item.basic.tmpOutputDir, item.options.outputName + '.gif')
+    const fileExists = fs.existsSync(outputFile)
+    logger.info('apng2gif', 'Output file exists:', fileExists)
+
+    if (fileExists) {
+      const fileSize = fs.statSync(outputFile).size
+      logger.info('apng2gif', 'Output file size:', fileSize, 'bytes')
+    }
+
+    logger.info('apng2gif', '=== APNG to GIF Complete ===')
+  }).catch(err => {
+    logger.error('apng2gif', 'apng2gif binary failed:', err.message)
+    logger.error('apng2gif', 'Stack:', err.stack)
+    throw err
+  })
 }

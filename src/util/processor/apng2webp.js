@@ -280,13 +280,32 @@ function convertFramesToWebP(frames, item, store, locale, tmpDir) {
   })
 
   return Promise.all(promises).then(function (args) {
-    console.log(`All ${frames.length} frames converted to WebP, assembling...`)
+    logger.info('apng2webp', `All ${frames.length} frames converted to WebP, assembling...`)
     return Promise.resolve(args.join(' '))
   }).then((args) => {
+    logger.info('apng2webp', 'Executing webpmux...')
+
     return action.exec('cd ' + tmpDir + ' && ' + action.bin('webpmux'), [
       args,
       '-loop ' + item.options.loop,
       '-o ' + path.join(item.basic.tmpOutputDir, item.options.outputName + '.webp')
     ], item, store, locale)
+  }).then(() => {
+    logger.info('apng2webp', 'webpmux completed successfully')
+
+    const outputFile = path.join(item.basic.tmpOutputDir, item.options.outputName + '.webp')
+    const fileExists = fs.existsSync(outputFile)
+    logger.info('apng2webp', 'Output file exists:', fileExists)
+
+    if (fileExists) {
+      const fileSize = fs.statSync(outputFile).size
+      logger.info('apng2webp', 'Output file size:', fileSize, 'bytes')
+    }
+
+    logger.info('apng2webp', '=== APNG to WEBP Complete ===')
+  }).catch(err => {
+    logger.error('apng2webp', 'WEBP conversion failed:', err.message)
+    logger.error('apng2webp', 'Stack:', err.stack)
+    throw err
   })
 }

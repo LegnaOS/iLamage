@@ -19,6 +19,7 @@ import Action 		from './action'
 import fs 			from 'fs-extra'
 import path 		from 'path'
 import TYPE 		from '../../store/enum/type'
+import logger from '../logger'
 
 export default function (store, sameOutputPath, locale) {
   // console.log(locale)
@@ -528,20 +529,46 @@ function apng2other (item, store, locale) {
 
       case TYPE.GIF:
         funcArr.push(apng2gif(item, store, locale).then(() => {
-          return fs.copy(
-					path.join(item.basic.tmpOutputDir, item.options.outputName + '.gif'),
-					path.join(item.basic.outputPath, item.options.outputName + '.gif')
-				)
+          const srcPath = path.join(item.basic.tmpOutputDir, item.options.outputName + '.gif')
+          const destPath = path.join(item.basic.outputPath, item.options.outputName + '.gif')
+
+          logger.info('index', '[GIF] Copying output file...')
+          logger.info('index', '[GIF] From:', srcPath)
+          logger.info('index', '[GIF] To:', destPath)
+          logger.info('index', '[GIF] Source exists:', fs.existsSync(srcPath))
+
+          return fs.copy(srcPath, destPath).then(() => {
+            logger.info('index', '[GIF] File copied successfully')
+            logger.info('index', '[GIF] Dest exists:', fs.existsSync(destPath))
+
+            if (fs.existsSync(destPath)) {
+              const fileSize = fs.statSync(destPath).size
+              logger.info('index', '[GIF] Final file size:', fileSize, 'bytes')
+            }
+          })
         }))
         break
 
       case TYPE.WEBP:
         // apng2webp 会自动检测 originalFileList 并跳过 apngdis
         funcArr.push(apng2webp(item, store, locale).then(() => {
-          fs.copySync(
-					path.join(item.basic.tmpOutputDir, item.options.outputName + '.webp'),
-					path.join(item.basic.outputPath, item.options.outputName + '.webp')
-				)
+          const srcPath = path.join(item.basic.tmpOutputDir, item.options.outputName + '.webp')
+          const destPath = path.join(item.basic.outputPath, item.options.outputName + '.webp')
+
+          logger.info('index', '[WEBP] Copying output file...')
+          logger.info('index', '[WEBP] From:', srcPath)
+          logger.info('index', '[WEBP] To:', destPath)
+          logger.info('index', '[WEBP] Source exists:', fs.existsSync(srcPath))
+
+          fs.copySync(srcPath, destPath)
+
+          logger.info('index', '[WEBP] File copied successfully')
+          logger.info('index', '[WEBP] Dest exists:', fs.existsSync(destPath))
+
+          if (fs.existsSync(destPath)) {
+            const fileSize = fs.statSync(destPath).size
+            logger.info('index', '[WEBP] Final file size:', fileSize, 'bytes')
+          }
         }))
         break
 
