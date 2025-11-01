@@ -166,7 +166,20 @@ async function checkFrameSizes(tmpDir, frameFiles) {
 async function detectFFmpeg() {
   try {
     const { detectFFmpeg } = await import('../ffmpeg-manager.js')
-    return await detectFFmpeg()
+    const result = await detectFFmpeg()
+
+    // ffmpeg-manager 返回对象 { system: {...}, installed: {...} }
+    // 优先使用系统安装的 FFmpeg
+    if (result.system && result.system.found) {
+      return result.system.path
+    }
+
+    // 降级到应用内置的 FFmpeg
+    if (result.installed && result.installed.found) {
+      return result.installed.path
+    }
+
+    return null
   } catch (error) {
     console.warn('[gif2pngs] FFmpeg detection failed:', error)
     return null

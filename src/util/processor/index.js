@@ -8,6 +8,7 @@ import gif2pngs     from './gif2pngs'  // GIF 直接转 PNG 序列（快速）
 import PNGs2apng 	from './pngs2apng'
 import pngs2webp    from './pngs2webp' // PNG 序列直接转 WEBP（快速）
 import webp2apng 	from './webp2apng'
+import webp2pngs    from './webp2pngs' // WEBP 直接转 PNG 序列（快速）
 import lottie2pngs 	from './lottie2pngs'
 import svga2pngs 	from './svga2pngs'
 import video2pngsWebAV from './video2pngs-webav' // WebAV 优先（WebM/MP4/VAP），自动降级到 FFmpeg
@@ -145,9 +146,10 @@ export default function (store, sameOutputPath, locale) {
               return apng2other(item, store, locale)
             })
           } else {
-            // 需要 APNG/GIF：使用传统 gif2apng
-            console.log('[GIF] Need APNG/GIF, using traditional gif2apng path')
-            promise = gif2apng(item, store, locale).then(() => {
+            // 需要 APNG/GIF：先用 gif2pngs 提取序列，再组装 APNG
+            console.log('[GIF] Need APNG/GIF, using gif2pngs + PNGs2apng path')
+            promise = gif2pngs(item, store, locale).then(() => {
+              // gif2pngs 已经将 item.basic.type 改为 'PNGs'
               // 保存原始的 PNG 序列文件列表（PNGs2apng 会修改它）
               const originalFileList = [...item.basic.fileList]
               const originalDelays = item.options.delays ? [...item.options.delays] : null
@@ -186,34 +188,59 @@ export default function (store, sameOutputPath, locale) {
         }
         break
 
-      case TYPE.WEBP:
-        promise = webp2apng(item, store, locale).then(() => {
-          // webp2apng 已经保存了 originalFileList 并调用了 PNGs2apng
-          // 现在 fileList[0] 是 APNG 文件，originalFileList 是 PNG 序列
+      case TYPE.WEBP: {
+        // 检查输出格式
+        const onlySequenceFrames = item.options.outputFormat.every(
+          fmt => fmt === TYPE.PNG_SEQ || fmt === TYPE.JPG_SEQ
+        )
 
-          console.log('[WEBP] After webp2apng, outputFormat:', item.options.outputFormat)
-          console.log('[WEBP] fileList length:', item.basic.fileList?.length)
-          console.log('[WEBP] originalFileList length:', item.basic.originalFileList?.length)
+        // 检查是否需要 APNG（可以跳过 APNG 组装）
+        const needsApng = item.options.outputFormat.some(
+          fmt => fmt === TYPE.APNG || fmt === TYPE.GIF
+        )
 
-          // 优化：如果只输出序列帧，跳过 APNG 组装（避免不必要的转换）
-          const onlySequenceFrames = item.options.outputFormat.every(
-            fmt => fmt === TYPE.PNG_SEQ || fmt === TYPE.JPG_SEQ
-          )
+        console.log('[WEBP] Output formats:', item.options.outputFormat)
+        console.log('[WEBP] Only sequence frames:', onlySequenceFrames)
+        console.log('[WEBP] Needs APNG:', needsApng)
 
-          console.log('[WEBP] onlySequenceFrames:', onlySequenceFrames)
+        if (onlySequenceFrames || !needsApng) {
+          // 只输出序列帧或不需要 APNG：使用 webp2pngs（直接提取，快速）
+          console.log('[WEBP] Using webp2pngs (fast path), onlySequenceFrames:', onlySequenceFrames, 'needsApng:', needsApng)
+          promise = webp2pngs(item, store, locale).then(() => {
+            // webp2pngs 已经将 item.basic.type 改为 'PNGs'
 
-          if (onlySequenceFrames) {
-            console.log('[WEBP] Only sequence frames requested, using originalFileList')
-            // 直接调用 apng2other 处理序列帧输出
+            // 保存原始文件列表，供 apng2webp 使用
+            const originalFileList = [...item.basic.fileList]
+            const originalDelays = item.options.delays ? [...item.options.delays] : null
+
+            console.log('[WEBP] Saving originalFileList for direct WEBP conversion:', originalFileList.length, 'frames')
+            item.basic.originalFileList = originalFileList
+            item.basic.originalDelays = originalDelays
+
+            // 直接调用 apng2other 处理 WEBP/序列帧输出
             return apng2other(item, store, locale)
-          }
+          }).catch((err) => {
+            console.error('[WEBP] webp2pngs failed:', err)
+            throw err
+          })
+        } else {
+          // 需要 APNG/GIF：使用传统 webp2apng（组装 APNG）
+          console.log('[WEBP] Using webp2apng (traditional path)')
+          promise = webp2apng(item, store, locale).then(() => {
+            // webp2apng 已经保存了 originalFileList 并调用了 PNGs2apng
+            // 现在 fileList[0] 是 APNG 文件，originalFileList 是 PNG 序列
 
-          // webp2apng 已经调用了 PNGs2apng 并保存了 originalFileList
-          // 直接调用 apng2other 处理其他格式输出
-          console.log('[WEBP] Using originalFileList from webp2apng:', item.basic.originalFileList?.length, 'frames')
-          return apng2other(item, store, locale)
-        })
+            console.log('[WEBP] After webp2apng, outputFormat:', item.options.outputFormat)
+            console.log('[WEBP] fileList length:', item.basic.fileList?.length)
+            console.log('[WEBP] originalFileList length:', item.basic.originalFileList?.length)
+
+            // 直接调用 apng2other 处理其他格式输出
+            console.log('[WEBP] Using originalFileList from webp2apng:', item.basic.originalFileList?.length, 'frames')
+            return apng2other(item, store, locale)
+          })
+        }
         break
+      }
 
       case TYPE.LOTTIE:
         promise = lottie2pngs(item, store, locale).then(() => {
