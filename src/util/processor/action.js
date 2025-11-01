@@ -12,17 +12,27 @@ function getBasePath() {
   if (basePath === null) {
     if (process.env.NODE_ENV === 'development') {
       basePath = process.cwd()
+      logger.info('action.js', '[getBasePath] Development mode, using cwd:', basePath)
     } else {
-      // 打包后使用 remote.app.getAppPath()
+      // 打包后使用 @electron/remote
       try {
-        const { remote } = require('electron')
+        const remote = require('@electron/remote')
         basePath = remote.app.getAppPath()
+        logger.info('action.js', '[getBasePath] Production mode, got app path:', basePath)
       } catch (err) {
-        console.error('[action.js] Failed to get app path:', err)
-        basePath = process.cwd()
+        logger.error('action.js', '[getBasePath] Failed to get app path from @electron/remote:', err.message)
+
+        // 降级：使用 __dirname（打包后指向 app.asar）
+        try {
+          basePath = path.join(__dirname, '..', '..', '..')
+          logger.warn('action.js', '[getBasePath] Using __dirname fallback:', basePath)
+        } catch (err2) {
+          logger.error('action.js', '[getBasePath] __dirname also failed, using cwd:', err2.message)
+          basePath = process.cwd()
+        }
       }
     }
-    console.log('[action.js] basePath:', basePath)
+    logger.info('action.js', '[getBasePath] Final basePath:', basePath)
   }
   return basePath
 }
