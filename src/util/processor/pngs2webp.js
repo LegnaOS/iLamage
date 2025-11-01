@@ -63,7 +63,11 @@ export default function (item, store, locale) {
       schedule: 0.9
     })
 
-    return action.exec('cd ' + tmpDir + ' && ' + action.bin('webpmux'), [
+    // Windows 使用 /d 参数支持跨盘符 cd
+    const isWindows = process.platform === 'win32'
+    const cdCommand = isWindows ? `cd /d "${tmpDir}"` : `cd "${tmpDir}"`
+
+    return action.exec(cdCommand + ' && ' + action.bin('webpmux'), [
       args.join(' '),
       '-loop ' + item.options.loop,
       '-o ' + path.join(item.basic.tmpOutputDir, item.options.outputName + '.webp')

@@ -83,10 +83,14 @@ export default class Action {
       logger.info('action.bin', `App path: ${appPath}`)
 
       // 尝试多个可能的路径
+      // Windows: app/bin/win64/xxx.exe 或 resources/app/bin/win64/xxx.exe
+      // macOS: app/bin/mac/xxx 或 Resources/app/bin/mac/xxx
+      // Linux: app/bin/linux/xxx 或 resources/app/bin/linux/xxx
       const possiblePaths = [
         path.join(appPath, 'bin', pf, exec),  // app/bin/
-        path.join(appPath, '..', 'bin', pf, exec),  // Resources/bin/
-        path.join(path.dirname(appPath), 'bin', pf, exec)  // 与 app 同级的 bin/
+        path.join(appPath, '..', 'bin', pf, exec),  // Resources/bin/ (macOS)
+        path.join(path.dirname(appPath), 'bin', pf, exec),  // 与 app 同级的 bin/
+        path.join(appPath, '..', '..', 'bin', pf, exec)  // Windows unpacked 结构
       ]
 
       logger.info('action.bin', `Trying paths:`, possiblePaths)

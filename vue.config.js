@@ -76,15 +76,35 @@ module.exports = {
         },
 
         win: {
-          target: ['nsis', 'zip'],  // 生成安装程序和压缩包
-          icon: './public/icons/icon.ico'
+          target: [
+            {
+              target: 'nsis',
+              arch: ['x64', 'ia32']  // 同时构建 64位 和 32位
+            },
+            {
+              target: 'zip',
+              arch: ['x64', 'ia32']
+            }
+          ],
+          icon: './public/icons/icon.ico',
+          // Windows 特定优化
+          requestedExecutionLevel: 'asInvoker',  // 不需要管理员权限
+          signAndEditExecutable: false  // 跳过签名（加快构建速度）
         },
 
         nsis: {
           oneClick: false,  // 允许用户选择安装路径
           allowToChangeInstallationDirectory: true,
           createDesktopShortcut: true,
-          createStartMenuShortcut: true
+          createStartMenuShortcut: true,
+          perMachine: false,  // 安装到用户目录（不需要管理员权限）
+          allowElevation: true,  // 允许用户选择提升权限
+          installerIcon: './public/icons/icon.ico',
+          uninstallerIcon: './public/icons/icon.ico',
+          installerHeaderIcon: './public/icons/icon.ico',
+          // NSIS 脚本优化
+          include: 'build/installer.nsh',  // 自定义 NSIS 脚本（如果需要）
+          warningsAsErrors: false  // 警告不作为错误（避免构建失败）
         },
 
         linux: {
