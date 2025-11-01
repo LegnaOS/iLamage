@@ -186,17 +186,22 @@ function getInstalledFFprobePath() {
 
 /**
  * 获取应用数据目录
+ * 使用 Electron 的 userData 路径，确保有完整权限
  */
 function getAppDataDir() {
-  const platform = process.platform
-
-  if (platform === 'darwin') {
-    return path.join(process.env.HOME || '', 'Library', 'Application Support', 'iLamage')
-  } else if (platform === 'win32') {
-    return path.join(process.env.APPDATA || '', 'iLamage')
-  } else {
-    return path.join(process.env.HOME || '', '.ilamage')
+  try {
+    // 优先使用 Electron 的 app.getPath('userData')
+    const { app } = require('@electron/remote')
+    if (app && app.getPath) {
+      return app.getPath('userData')
+    }
+  } catch (err) {
+    console.warn('[FFmpeg] Failed to get userData path, using fallback:', err.message)
   }
+
+  // 降级方案：使用临时目录（与 store/index.js 一致）
+  const os = require('os')
+  return path.join(os.tmpdir(), 'iLamage')
 }
 
 /**
