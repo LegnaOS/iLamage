@@ -102,8 +102,6 @@ module.exports = {
           installerIcon: './public/icons/icon.ico',
           uninstallerIcon: './public/icons/icon.ico',
           installerHeaderIcon: './public/icons/icon.ico',
-          // NSIS 脚本优化
-          include: 'build/installer.nsh',  // 自定义 NSIS 脚本（如果需要）
           warningsAsErrors: false  // 警告不作为错误（避免构建失败）
         },
 
