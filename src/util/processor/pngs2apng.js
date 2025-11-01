@@ -4,6 +4,7 @@ import action from './action'
 import apngCompress from './apngCompress'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import logger from '../logger'
 
 const execAsync = promisify(exec)
 
@@ -46,14 +47,22 @@ async function detectFFmpeg() {
  * 使用 FFmpeg 组装 APNG（快速）
  */
 async function assembleWithFFmpeg(item, tmpDir, frameCount, frameRate, store, locale) {
+  logger.info('pngs2apng', 'Attempting FFmpeg assembly...')
+
   const ffmpegPath = await detectFFmpeg()
   if (!ffmpegPath) {
+    logger.error('pngs2apng', 'FFmpeg not available')
     throw new Error('FFmpeg not available')
   }
+
+  logger.info('pngs2apng', 'FFmpeg path:', ffmpegPath)
 
   const outputPath = path.join(item.basic.tmpOutputDir, item.options.outputName + '.png')
   // 使用固定 6 位数字（支持最多 999,999 帧）
   const inputPattern = path.join(tmpDir, `apng%06d.png`)
+
+  logger.info('pngs2apng', 'Output path:', outputPath)
+  logger.info('pngs2apng', 'Input pattern:', inputPattern)
 
   // FFmpeg 命令：组装 APNG
   // -framerate: 输入帧率
@@ -85,18 +94,29 @@ async function assembleWithFFmpeg(item, tmpDir, frameCount, frameRate, store, lo
   })
 
   const startTime = Date.now()
-  await execAsync(command)
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2)
+  logger.info('pngs2apng', 'Executing FFmpeg command...')
 
-  console.log(`[FFmpeg] APNG assembled in ${elapsed}s (${(frameCount / parseFloat(elapsed)).toFixed(1)} fps)`)
-
-  return outputPath
+  try {
+    await execAsync(command)
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2)
+    logger.info('pngs2apng', `FFmpeg APNG assembled in ${elapsed}s`)
+    return outputPath
+  } catch (err) {
+    logger.error('pngs2apng', 'FFmpeg assembly failed:', err.message)
+    throw err
+  }
 }
 
 export default function (item, store, locale) {
+  logger.info('pngs2apng', '=== PNGs to APNG Start ===')
+  logger.info('pngs2apng', 'Input files:', item.basic.fileList.length, 'frames')
+  logger.info('pngs2apng', 'First file:', item.basic.fileList[0])
+  logger.info('pngs2apng', 'Frame rate:', item.options.frameRate)
+  logger.info('pngs2apng', 'Has delays:', !!item.options.delays)
+
   // 检查是否已取消
   if (store.state.cancelled) {
-    console.log('[pngs2apng] Task cancelled before start')
+    logger.warn('pngs2apng', 'Task cancelled before start')
     return Promise.reject({ cancelled: true })
   }
 
