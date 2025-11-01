@@ -149,12 +149,23 @@ function getVideoInfo(ffmpegPath, videoFile) {
 
     exec(command, (err, stdout, stderr) => {
       if (err) {
+        console.warn('[webm2pngs] ffprobe exec error:', err.message)
         // ffprobe 可能不存在，尝试使用 ffmpeg
         return getVideoInfoWithFFmpeg(ffmpegPath, videoFile).then(resolve).catch(reject)
       }
 
       try {
+        console.log('[webm2pngs] ffprobe stdout:', stdout)
+        console.log('[webm2pngs] ffprobe stderr:', stderr)
+
         const info = JSON.parse(stdout)
+
+        // 检查 streams 是否存在
+        if (!info.streams || info.streams.length === 0) {
+          console.warn('[webm2pngs] ffprobe returned no streams, falling back to ffmpeg')
+          return getVideoInfoWithFFmpeg(ffmpegPath, videoFile).then(resolve).catch(reject)
+        }
+
         const stream = info.streams[0]
         const format = info.format
 
