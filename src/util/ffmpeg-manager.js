@@ -48,43 +48,72 @@ export async function detectFFmpeg() {
     if (platform === 'darwin') {
       // macOS: 尝试常见路径
       const possiblePaths = [
-        '/usr/local/bin/ffmpeg',
-        '/opt/homebrew/bin/ffmpeg',
-        '/usr/bin/ffmpeg'
+        '/opt/homebrew/bin/ffmpeg',      // Apple Silicon Homebrew
+        '/usr/local/bin/ffmpeg',         // Intel Homebrew
+        '/opt/local/bin/ffmpeg',         // MacPorts
+        '/sw/bin/ffmpeg',                // Fink
+        '/usr/bin/ffmpeg'                // 系统自带（罕见）
       ]
 
       for (const p of possiblePaths) {
         if (fs.existsSync(p)) {
           result.system.found = true
           result.system.path = p
+          console.log(`[FFmpeg] Found system FFmpeg at: ${p}`)
           break
         }
       }
 
-      // 尝试 which ffmpeg
+      // 尝试 which ffmpeg（设置 PATH 环境变量）
       if (!result.system.found) {
         try {
-          const { stdout } = await execAsync('which ffmpeg')
+          // 确保包含常见的 Homebrew 路径
+          const env = {
+            ...process.env,
+            PATH: `/opt/homebrew/bin:/usr/local/bin:/opt/local/bin:/sw/bin:${process.env.PATH || ''}`
+          }
+          const { stdout } = await execAsync('which ffmpeg', { env, timeout: 5000 })
           const ffmpegPath = stdout.trim()
           if (ffmpegPath && fs.existsSync(ffmpegPath)) {
             result.system.found = true
             result.system.path = ffmpegPath
+            console.log(`[FFmpeg] Found system FFmpeg via which: ${ffmpegPath}`)
           }
         } catch (err) {
-          // which 命令失败，说明系统没有 ffmpeg
+          console.log('[FFmpeg] which ffmpeg failed:', err.message)
         }
       }
     } else if (platform === 'win32') {
-      // Windows: 尝试 where ffmpeg
-      try {
-        const { stdout } = await execAsync('where ffmpeg')
-        const ffmpegPath = stdout.split('\n')[0].trim()
-        if (ffmpegPath && fs.existsSync(ffmpegPath)) {
+      // Windows: 尝试常见路径
+      const possiblePaths = [
+        path.join(process.env.ProgramFiles || 'C:\\Program Files', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+        path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+        'C:\\ffmpeg\\bin\\ffmpeg.exe'
+      ]
+
+      for (const p of possiblePaths) {
+        if (p && fs.existsSync(p)) {
           result.system.found = true
-          result.system.path = ffmpegPath
+          result.system.path = p
+          console.log(`[FFmpeg] Found system FFmpeg at: ${p}`)
+          break
         }
-      } catch (err) {
-        // where 命令失败，说明系统没有 ffmpeg
+      }
+
+      // 尝试 where ffmpeg
+      if (!result.system.found) {
+        try {
+          const { stdout } = await execAsync('where ffmpeg', { timeout: 5000 })
+          const ffmpegPath = stdout.split('\n')[0].trim()
+          if (ffmpegPath && fs.existsSync(ffmpegPath)) {
+            result.system.found = true
+            result.system.path = ffmpegPath
+            console.log(`[FFmpeg] Found system FFmpeg via where: ${ffmpegPath}`)
+          }
+        } catch (err) {
+          console.log('[FFmpeg] where ffmpeg failed:', err.message)
+        }
       }
     }
   } catch (err) {
@@ -689,13 +718,28 @@ export function getCurrentFFmpegPath() {
     const platform = process.platform
     if (platform === 'darwin') {
       const possiblePaths = [
-        '/usr/local/bin/ffmpeg',
-        '/opt/homebrew/bin/ffmpeg',
-        '/usr/bin/ffmpeg'
+        '/opt/homebrew/bin/ffmpeg',      // Apple Silicon Homebrew
+        '/usr/local/bin/ffmpeg',         // Intel Homebrew
+        '/opt/local/bin/ffmpeg',         // MacPorts
+        '/sw/bin/ffmpeg',                // Fink
+        '/usr/bin/ffmpeg'                // 系统自带
       ]
 
       for (const p of possiblePaths) {
         if (fs.existsSync(p)) {
+          return p
+        }
+      }
+    } else if (platform === 'win32') {
+      const possiblePaths = [
+        path.join(process.env.ProgramFiles || 'C:\\Program Files', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+        path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+        'C:\\ffmpeg\\bin\\ffmpeg.exe'
+      ]
+
+      for (const p of possiblePaths) {
+        if (p && fs.existsSync(p)) {
           return p
         }
       }

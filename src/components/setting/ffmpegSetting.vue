@@ -358,11 +358,46 @@ export default {
     
     // 检测系统 FFmpeg 和 ffprobe
     async detectSystemFFmpeg() {
+      const platform = process.platform
+
       // 检测 ffmpeg
       await new Promise((resolve) => {
-        const command = process.platform === 'win32' ? 'where ffmpeg' : 'which ffmpeg'
+        // 先尝试常见路径
+        let possiblePaths = []
+        if (platform === 'darwin') {
+          possiblePaths = [
+            '/opt/homebrew/bin/ffmpeg',
+            '/usr/local/bin/ffmpeg',
+            '/opt/local/bin/ffmpeg',
+            '/sw/bin/ffmpeg',
+            '/usr/bin/ffmpeg'
+          ]
+        } else if (platform === 'win32') {
+          possiblePaths = [
+            path.join(process.env.ProgramFiles || 'C:\\Program Files', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+            path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+            path.join(process.env.LOCALAPPDATA || '', 'Programs', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+            'C:\\ffmpeg\\bin\\ffmpeg.exe'
+          ]
+        }
 
-        exec(command, (err, stdout) => {
+        // 检查常见路径
+        for (const p of possiblePaths) {
+          if (p && fs.existsSync(p)) {
+            this.systemFFmpeg.found = true
+            this.systemFFmpeg.path = p
+            return resolve()
+          }
+        }
+
+        // 尝试 which/where 命令
+        const command = platform === 'win32' ? 'where ffmpeg' : 'which ffmpeg'
+        const env = platform === 'darwin' ? {
+          ...process.env,
+          PATH: `/opt/homebrew/bin:/usr/local/bin:/opt/local/bin:/sw/bin:${process.env.PATH || ''}`
+        } : process.env
+
+        exec(command, { env, timeout: 5000 }, (err, stdout) => {
           if (err || !stdout.trim()) {
             this.systemFFmpeg.found = false
             this.systemFFmpeg.path = ''
@@ -376,9 +411,42 @@ export default {
 
       // 检测 ffprobe
       await new Promise((resolve) => {
-        const command = process.platform === 'win32' ? 'where ffprobe' : 'which ffprobe'
+        // 先尝试常见路径
+        let possiblePaths = []
+        if (platform === 'darwin') {
+          possiblePaths = [
+            '/opt/homebrew/bin/ffprobe',
+            '/usr/local/bin/ffprobe',
+            '/opt/local/bin/ffprobe',
+            '/sw/bin/ffprobe',
+            '/usr/bin/ffprobe'
+          ]
+        } else if (platform === 'win32') {
+          possiblePaths = [
+            path.join(process.env.ProgramFiles || 'C:\\Program Files', 'ffmpeg', 'bin', 'ffprobe.exe'),
+            path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'ffmpeg', 'bin', 'ffprobe.exe'),
+            path.join(process.env.LOCALAPPDATA || '', 'Programs', 'ffmpeg', 'bin', 'ffprobe.exe'),
+            'C:\\ffmpeg\\bin\\ffprobe.exe'
+          ]
+        }
 
-        exec(command, (err, stdout) => {
+        // 检查常见路径
+        for (const p of possiblePaths) {
+          if (p && fs.existsSync(p)) {
+            this.systemFFprobe.found = true
+            this.systemFFprobe.path = p
+            return resolve()
+          }
+        }
+
+        // 尝试 which/where 命令
+        const command = platform === 'win32' ? 'where ffprobe' : 'which ffprobe'
+        const env = platform === 'darwin' ? {
+          ...process.env,
+          PATH: `/opt/homebrew/bin:/usr/local/bin:/opt/local/bin:/sw/bin:${process.env.PATH || ''}`
+        } : process.env
+
+        exec(command, { env, timeout: 5000 }, (err, stdout) => {
           if (err || !stdout.trim()) {
             this.systemFFprobe.found = false
             this.systemFFprobe.path = ''
