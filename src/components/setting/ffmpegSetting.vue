@@ -50,33 +50,33 @@
         <el-form label-width="120px" size="small">
           <!-- 系统 FFmpeg -->
           <el-form-item :label="$t('systemFFmpeg')">
-            <div class="status-column">
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
               <!-- FFmpeg 状态 -->
-              <div class="tool-row">
-                <span class="tool-label">ffmpeg:</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="min-width: 80px; font-weight: 500;">ffmpeg:</span>
                 <el-tag v-if="systemFFmpeg.found" type="success" size="mini">
-                  <i class="el-icon-success"></i> {{ $t("statusFound") }}
+                  {{ $t("statusFound") }}
                 </el-tag>
                 <el-tag v-else type="info" size="mini">
-                  <i class="el-icon-info"></i> {{ $t("statusNotFound") }}
+                  {{ $t("statusNotFound") }}
                 </el-tag>
-                <span v-if="systemFFmpeg.path" class="path-text">{{ systemFFmpeg.path }}</span>
+                <span v-if="systemFFmpeg.path" style="color: #909399; font-size: 12px; margin-left: 8px;">{{ systemFFmpeg.path }}</span>
               </div>
 
               <!-- ffprobe 状态 -->
-              <div class="tool-row">
-                <span class="tool-label">ffprobe:</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="min-width: 80px; font-weight: 500;">ffprobe:</span>
                 <el-tag v-if="systemFFprobe.found" type="success" size="mini">
-                  <i class="el-icon-success"></i> {{ $t("statusFound") }}
+                  {{ $t("statusFound") }}
                 </el-tag>
                 <el-tag v-else type="info" size="mini">
-                  <i class="el-icon-info"></i> {{ $t("statusNotFound") }}
+                  {{ $t("statusNotFound") }}
                 </el-tag>
-                <span v-if="systemFFprobe.path" class="path-text">{{ systemFFprobe.path }}</span>
+                <span v-if="systemFFprobe.path" style="color: #909399; font-size: 12px; margin-left: 8px;">{{ systemFFprobe.path }}</span>
               </div>
 
               <!-- 操作按钮 -->
-              <div class="action-row">
+              <div>
                 <el-button
                   type="text"
                   size="mini"

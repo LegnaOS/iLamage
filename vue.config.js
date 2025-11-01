@@ -1,4 +1,7 @@
 module.exports = {
+  // 使用相对路径，确保打包后资源能正确加载
+  publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
+
   pluginOptions: {
     electronBuilder: {
       nodeIntegration: true,
@@ -77,6 +80,19 @@ module.exports = {
           }
         }
       }
+    },
+    // 字体文件处理：使用相对路径而不是 app:// 协议
+    module: {
+      rules: [
+        {
+          test: /\.(woff|woff2|eot|ttf|otf)$/i,
+          type: 'asset/resource',
+          generator: {
+            filename: 'fonts/[name].[contenthash:8][ext]',
+            publicPath: '../'  // CSS 在 css/ 目录，字体在 fonts/ 目录，所以用 ../
+          }
+        }
+      ]
     }
   },
   // 转译现代依赖
