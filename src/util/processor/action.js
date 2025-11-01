@@ -3,11 +3,28 @@ import path from 'path'
 import Process from 'child_process'
 
 const ipc = require('electron').ipcRenderer
-ipc.send('get-app-path')
-var basePath = ''
-ipc.on('got-app-path', function(event, path) {
-  basePath = path
-})
+
+// 延迟初始化 basePath，避免在模块加载时立即调用 remote
+let basePath = null
+
+function getBasePath() {
+  if (basePath === null) {
+    if (process.env.NODE_ENV === 'development') {
+      basePath = process.cwd()
+    } else {
+      // 打包后使用 remote.app.getAppPath()
+      try {
+        const { remote } = require('electron')
+        basePath = remote.app.getAppPath()
+      } catch (err) {
+        console.error('[action.js] Failed to get app path:', err)
+        basePath = process.cwd()
+      }
+    }
+    console.log('[action.js] basePath:', basePath)
+  }
+  return basePath
+}
 
 const tmpDir = path.join(os.tmpdir(), 'iLamage')
 
@@ -40,23 +57,54 @@ export default class Action {
 
   static bin(exec) {
     var pf = getOsInfo()
-    // console.log(process.env)
 
-    if (process.env.NODE_ENV == 'development') {
-      var bin = path.join(process.cwd(), '/public/bin/', pf, exec)
+    let bin
+    if (process.env.NODE_ENV === 'development') {
+      // 开发模式：使用 public/bin/
+      bin = path.join(process.cwd(), 'public', 'bin', pf, exec)
     } else {
-      var bin = path.join(basePath, '/bin/', pf, exec)
+      // 打包后：使用 getBasePath() 延迟获取路径
+      const appPath = getBasePath()
+
+      // 尝试多个可能的路径
+      const possiblePaths = [
+        path.join(appPath, 'bin', pf, exec),  // app/bin/
+        path.join(appPath, '..', 'bin', pf, exec),  // Resources/bin/
+        path.join(path.dirname(appPath), 'bin', pf, exec)  // 与 app 同级的 bin/
+      ]
+
+      const fs = require('fs-extra')
+      for (const testPath of possiblePaths) {
+        const testExec = pf === 'win32' || pf === 'win64' ? testPath + '.exe' : testPath
+        if (fs.existsSync(testExec)) {
+          bin = testPath
+          console.log('[action.bin] Found binary at:', testExec)
+          break
+        }
+      }
+
+      if (!bin) {
+        console.error('[action.bin] Binary not found:', exec)
+        console.error('[action.bin] Tried paths:', possiblePaths)
+        bin = path.join(appPath, 'bin', pf, exec)  // 降级到默认路径
+      }
     }
 
     // chmod 只在 Unix 系统上执行（macOS/Linux）
     if (pf !== 'win32' && pf !== 'win64') {
-      Process.exec("chmod -R +x " + bin);
+      try {
+        Process.exec("chmod -R +x " + bin)
+      } catch (err) {
+        console.warn('[action.bin] chmod failed:', err.message)
+      }
     }
 
-    if (pf == 'win32' || pf == 'win64') {
+    if (pf === 'win32' || pf === 'win64') {
       bin = bin + '.exe'
     }
-    bin = "\""+bin+"\"";
+
+    bin = "\"" + bin + "\""
+    console.log('[action.bin] Final path:', bin)
 
     return bin
   }

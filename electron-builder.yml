@@ -3,6 +3,13 @@ asar: false
 publish:
   - provider: github
 
+# 复制 bin 目录到打包后的应用
+extraResources:
+  - from: public/bin
+    to: bin
+    filter:
+      - "**/*"
+
 win:
   target:
     - target: zip

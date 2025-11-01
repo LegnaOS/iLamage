@@ -24,10 +24,10 @@ protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    minWidth: 820,
-    minHeight: 800,
-    width: 820,
-    height: 800,
+    minWidth: 1024,
+    minHeight: 960,
+    width: 1024,
+    height: 960,
     icon:path.join(__static,"icons/icon.icns"),
     title:"iLamage",
     show: false,

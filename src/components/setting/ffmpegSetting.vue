@@ -47,35 +47,32 @@
 
       <!-- 状态显示 -->
       <div class="status-section">
-        <el-form label-width="120px" size="small">
+        <el-form label-width="140px" size="small">
           <!-- 系统 FFmpeg -->
           <el-form-item :label="$t('systemFFmpeg')">
-            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-              <!-- FFmpeg 状态 -->
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="min-width: 80px; font-weight: 500;">ffmpeg:</span>
+            <div>
+              <div style="margin-bottom: 8px;">
+                <span style="display: inline-block; width: 90px; font-weight: 500;">ffmpeg:</span>
                 <el-tag v-if="systemFFmpeg.found" type="success" size="mini">
                   {{ $t("statusFound") }}
                 </el-tag>
                 <el-tag v-else type="info" size="mini">
                   {{ $t("statusNotFound") }}
                 </el-tag>
-                <span v-if="systemFFmpeg.path" style="color: #909399; font-size: 12px; margin-left: 8px;">{{ systemFFmpeg.path }}</span>
+                <span v-if="systemFFmpeg.path" style="margin-left: 10px; color: #909399; font-size: 12px;">{{ systemFFmpeg.path }}</span>
               </div>
 
-              <!-- ffprobe 状态 -->
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="min-width: 80px; font-weight: 500;">ffprobe:</span>
+              <div style="margin-bottom: 8px;">
+                <span style="display: inline-block; width: 90px; font-weight: 500;">ffprobe:</span>
                 <el-tag v-if="systemFFprobe.found" type="success" size="mini">
                   {{ $t("statusFound") }}
                 </el-tag>
                 <el-tag v-else type="info" size="mini">
                   {{ $t("statusNotFound") }}
                 </el-tag>
-                <span v-if="systemFFprobe.path" style="color: #909399; font-size: 12px; margin-left: 8px;">{{ systemFFprobe.path }}</span>
+                <span v-if="systemFFprobe.path" style="margin-left: 10px; color: #909399; font-size: 12px;">{{ systemFFprobe.path }}</span>
               </div>
 
-              <!-- 操作按钮 -->
               <div>
                 <el-button
                   type="text"
@@ -91,10 +88,9 @@
 
           <!-- 内置 FFmpeg / ffprobe -->
           <el-form-item :label="$t('builtinTools')">
-            <div class="status-column">
-              <!-- FFmpeg 状态 -->
-              <div class="tool-row">
-                <span class="tool-label">ffmpeg:</span>
+            <div>
+              <div style="margin-bottom: 8px;">
+                <span style="display: inline-block; width: 90px; font-weight: 500;">ffmpeg:</span>
                 <el-tag v-if="builtinFFmpeg.found" type="success" size="mini">
                   <i class="el-icon-success"></i> {{ $t("statusInstalled") }}
                 </el-tag>
@@ -103,9 +99,8 @@
                 </el-tag>
               </div>
 
-              <!-- ffprobe 状态 -->
-              <div class="tool-row">
-                <span class="tool-label">ffprobe:</span>
+              <div style="margin-bottom: 8px;">
+                <span style="display: inline-block; width: 90px; font-weight: 500;">ffprobe:</span>
                 <el-tag v-if="builtinFFprobe.found" type="success" size="mini">
                   <i class="el-icon-success"></i> {{ $t("statusInstalled") }}
                 </el-tag>
@@ -114,13 +109,11 @@
                 </el-tag>
               </div>
 
-              <!-- 路径显示 -->
-              <div v-if="builtinFFmpeg.path" class="tool-row">
-                <span class="path-text">{{ getFFmpegDir(builtinFFmpeg.path) }}</span>
+              <div v-if="builtinFFmpeg.path" style="margin-bottom: 8px;">
+                <span style="color: #909399; font-size: 12px;">{{ getFFmpegDir(builtinFFmpeg.path) }}</span>
               </div>
 
-              <!-- 操作按钮 -->
-              <div class="action-row">
+              <div>
                 <el-button
                   v-if="builtinFFmpeg.found"
                   type="text"
@@ -808,28 +801,45 @@ export default {
   margin-bottom: 20px;
 }
 
-/* 垂直布局容器 */
-.status-column {
+/* FFmpeg 状态容器 - 使用更具体的选择器避免冲突 */
+.ffmpeg-setting .ffmpeg-status-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  width: 100%;
 }
 
-/* 每个工具的行 */
-.tool-row {
+/* 状态行 - 使用嵌套选择器 */
+.ffmpeg-setting .ffmpeg-status-container .status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 状态标签（ffmpeg:, ffprobe:） */
+.ffmpeg-setting .ffmpeg-status-container .status-label {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+  min-width: 85px;
+  flex-shrink: 0;
+}
+
+/* 状态路径 */
+.ffmpeg-setting .ffmpeg-status-container .status-path {
+  color: #909399;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  word-break: break-all;
+}
+
+/* 状态操作按钮 */
+.ffmpeg-setting .ffmpeg-status-container .status-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 28px;
-}
-
-/* 工具标签（ffmpeg:, ffprobe:）固定宽度 */
-.tool-label {
-  font-size: 13px;
-  color: #606266;
-  font-weight: 500;
-  min-width: 70px;
-  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 /* 路径文本 */
@@ -843,18 +853,11 @@ export default {
   flex: 1;
 }
 
-/* 操作按钮行 */
-.action-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
 .custom-path-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .current-ffmpeg {
