@@ -161,28 +161,37 @@ async function checkFrameSizes(tmpDir, frameFiles) {
 }
 
 /**
- * 检测 FFmpeg
+ * 检测 FFmpeg（内联实现，避免打包后动态import失败）
  */
 async function detectFFmpeg() {
+  const ffmpegPath = window.storage.getItem('ffmpegPath')
+
+  // 1. 优先使用用户配置的路径
+  if (ffmpegPath && ffmpegPath.trim() !== '') {
+    try {
+      await execAsync(`"${ffmpegPath}" -version`)
+      console.log('[gif2pngs] Using configured FFmpeg:', ffmpegPath)
+      return ffmpegPath
+    } catch (err) {
+      console.warn('[gif2pngs] Configured FFmpeg not working:', ffmpegPath)
+    }
+  }
+
+  // 2. 尝试系统 FFmpeg
   try {
-    const { detectFFmpeg } = await import('../ffmpeg-manager.js')
-    const result = await detectFFmpeg()
-
-    // ffmpeg-manager 返回对象 { system: {...}, installed: {...} }
-    // 优先使用系统安装的 FFmpeg
-    if (result.system && result.system.found) {
-      return result.system.path
+    await execAsync('ffmpeg -version')
+    console.log('[gif2pngs] Found system ffmpeg')
+    return 'ffmpeg'
+  } catch (err) {
+    // 3. macOS Homebrew 路径
+    try {
+      await execAsync('/opt/homebrew/bin/ffmpeg -version')
+      console.log('[gif2pngs] Found Homebrew ffmpeg')
+      return '/opt/homebrew/bin/ffmpeg'
+    } catch (err2) {
+      console.log('[gif2pngs] FFmpeg not found')
+      return null
     }
-
-    // 降级到应用内置的 FFmpeg
-    if (result.installed && result.installed.found) {
-      return result.installed.path
-    }
-
-    return null
-  } catch (error) {
-    console.warn('[gif2pngs] FFmpeg detection failed:', error)
-    return null
   }
 }
 

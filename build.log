@@ -1,0 +1,216 @@
+
+> ilamage@1.0.0 build:mac
+> vue-cli-service electron:build --mac zip
+
+ INFO  Bundling render process:
+All browser targets in the browserslist configuration have supported ES module.
+Therefore we don't build two separate bundles for differential loading.
+
+
+-  Building for production...
+ WARNING  Compiled with 5 warnings3:59:11 PM
+
+[eslint] 
+/Users/legna/Downloads/iSparta/src/components/delayDialog/index.vue
+   27:7   warning  'path' is assigned a value but never used     no-unused-vars
+   28:7   warning  'fs' is assigned a value but never used       no-unused-vars
+   33:7   warning  'imgType' is assigned a value but never used  no-unused-vars
+   35:7   warning  'ipc' is assigned a value but never used      no-unused-vars
+   36:8   warning  'dialog' is assigned a value but never used   no-unused-vars
+   37:15  warning  'fsOperate' is defined but never used         no-unused-vars
+  110:37  warning  'reject' is defined but never used            no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/components/drag/drag.js
+  1:7  warning  'path' is assigned a value but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/components/drag/file.js
+    4:7   warning  '_' is assigned a value but never used        no-unused-vars
+   45:13  warning  'res' is assigned a value but never used      no-unused-vars
+   62:9   warning  'isApng' is defined but never used            no-unused-vars
+   63:9   warning  'tempPng' is assigned a value but never used  no-unused-vars
+  203:33  warning  Empty block statement                         no-empty
+  206:14  warning  'i' is already defined                        no-redeclare
+  230:43  warning  'reject' is defined but never used            no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/components/mainUpload/mainUpload.vue
+  26:13  warning  'd' is defined but never used         no-unused-vars
+  49:13  warning  'filsList' is defined but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/components/projectList/menu.js
+  20:55  warning  Unnecessary escape character: \/  no-useless-escape
+
+/Users/legna/Downloads/iSparta/src/components/projectList/projectList.vue
+   62:7   warning  'path' is assigned a value but never used  no-unused-vars
+   63:7   warning  'fs' is assigned a value but never used    no-unused-vars
+  101:46  warning  'order' is defined but never used          no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/components/setting/ffmpegSetting.vue
+  248:9   warning  'ipcRenderer' is assigned a value but never used    no-unused-vars
+  634:15  warning  'installedPath' is assigned a value but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/components/setting/pagviewerSetting.vue
+  317:15  warning  'installedPath' is assigned a value but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/ffmpeg-manager.js
+  204:10  warning  'getInstalledFFprobePath' is defined but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/action.js
+  5:7  warning  'ipc' is assigned a value but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/apng2webp.js
+  4:8  warning  'apngCompress' is defined but never used  no-unused-vars
+  5:8  warning  'TYPE' is defined but never used          no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/apngCompress.js
+  55:36  warning  'err' is defined but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/gif2pngs.js
+  10:8  warning  'action' is defined but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/index.js
+    6:8   warning  'gif2apng' is defined but never used                 no-unused-vars
+    9:8   warning  'pngs2webp' is defined but never used                no-unused-vars
+   15:8   warning  'webm2pngsWebAV' is defined but never used           no-unused-vars
+  452:7   warning  'hasApng' is assigned a value but never used         no-unused-vars
+  472:9   warning  'originalDelays' is assigned a value but never used  no-unused-vars
+  520:42  warning  'index' is defined but never used                    no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/lottie2pngs.js
+   15:8   warning  'action' is defined but never used                  no-unused-vars
+  107:15  warning  'batchPromises' is assigned a value but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/pag2pngs.js
+  36:9  warning  'pagFileDir' is assigned a value but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/pngs2apng.js
+  48:79  warning  'locale' is defined but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/pngs2webp.js
+  8:8  warning  'fs' is defined but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/svga2pngs.js
+  15:8  warning  'action' is defined but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/video2pngs-webav.js
+  77:96  warning  'locale' is defined but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/webm2pngs.js
+   22:7   warning  'execAsync' is assigned a value but never used  no-unused-vars
+   54:27  warning  'numLen' is defined but never used              no-unused-vars
+  150:33  warning  'stderr' is defined but never used              no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/util/processor/webp2apng.js
+  17:7  warning  'webpDir' is already defined  no-redeclare
+
+/Users/legna/Downloads/iSparta/src/util/processor/webp2pngs.js
+  172:13  warning  'frameData' is assigned a value but never used  no-unused-vars
+
+/Users/legna/Downloads/iSparta/src/views/LandingPage.vue
+  22:13  warning  'd' is defined but never used               no-unused-vars
+  55:5   warning  '_mtac' is assigned a value but never used  no-unused-vars
+
+✖ 50 problems (0 errors, 50 warnings)
+
+
+You may use special comments to disable some warnings.
+Use // eslint-disable-next-line to ignore the next line.
+Use /* eslint-disable */ to ignore all warnings in a file.
+ warning  in ./src/components/globalSetting/globalSetting.vue?vue&type=style&index=0&id=63a50a84&prod&lang=scss
+
+Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 1, column 8 of file:///Users/legna/Downloads/iSparta/src/components/globalSetting/globalSetting.vue:1:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+1 | @import "./globalSetting.scss";
+
+
+src/components/globalSetting/globalSetting.vue 2:9  root stylesheet
+
+
+ warning  in ./src/components/mainUpload/mainUpload.vue?vue&type=style&index=0&id=ebec22b2&prod&lang=scss
+
+Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 1, column 8 of file:///Users/legna/Downloads/iSparta/src/components/mainUpload/mainUpload.vue:1:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+1 | @import "./mainUpload";
+
+
+src/components/mainUpload/mainUpload.vue 2:9  root stylesheet
+
+
+ warning  in ./src/components/projectList/projectList.vue?vue&type=style&index=0&id=5bb55525&prod&lang=scss
+
+Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 1, column 8 of file:///Users/legna/Downloads/iSparta/src/components/projectList/projectList.vue:1:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+1 | @import "./projectList.scss";
+
+
+src/components/projectList/projectList.vue 2:9  root stylesheet
+
+
+ warning  in ./src/components/setting/setting.vue?vue&type=style&index=0&id=5bbb5457&prod&lang=scss
+
+Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 1, column 8 of file:///Users/legna/Downloads/iSparta/src/components/setting/setting.vue:1:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+1 | @import "./setting.scss";
+
+
+src/components/setting/setting.vue 2:9  root stylesheet
+
+
+  File                                      Size             Gzipped
+
+  dist_electron/bundled/js/vendors.91e87    1564.09 KiB      437.98 KiB
+  9dd.js
+  dist_electron/bundled/js/app.af614d68.    213.61 KiB       58.24 KiB
+  js
+  dist_electron/bundled/js/webav.f4479c0    172.17 KiB       40.49 KiB
+  5.js
+  dist_electron/bundled/css/vendors.1d99    206.39 KiB       33.90 KiB
+  033a.css
+  dist_electron/bundled/css/app.808b4ce1    12.29 KiB        2.77 KiB
+  .css
+
+  Images and other types of assets omitted.
+  Build at: 2025-11-01T07:59:11.059Z - Hash: d2756b18cd7e8cea - Time: 6911ms
+
+ DONE  Build complete. The dist_electron/bundled directory is ready to be deployed.
+ INFO  Check out deployment instructions at https://cli.vuejs.org/guide/deployment.html
+       
+-  Bundling main process...
+ DONE  Compiled successfully in 268ms3:59:11 PM
+
+  File                                   Size              Gzipped
+
+  dist_electron/bundled/background.js    177.05 KiB        54.78 KiB
+
+  Images and other types of assets omitted.
+  Build at: 2025-11-01T07:59:11.528Z - Hash: 6629dbd0a7ddb514a5ec - Time: 268ms
+
+ INFO  Building app with electron-builder:
+  • electron-builder  version=22.14.13 os=25.1.0
+  • loaded configuration  file=/Users/legna/Downloads/iSparta/electron-builder.yml
+  • description is missed in the package.json  appPackageFile=/Users/legna/Downloads/iSparta/dist_electron/bundled/package.json
+  • author is missed in the package.json  appPackageFile=/Users/legna/Downloads/iSparta/dist_electron/bundled/package.json
+  • packaging       platform=darwin arch=arm64 electron=22.3.27 appOutDir=dist_electron/mac-arm64
+  • asar usage is disabled — this is strongly not recommended  solution=enable asar and use asarUnpack to unpack files that must be externally available
+  • asar usage is disabled — this is strongly not recommended  solution=enable asar and use asarUnpack to unpack files that must be externally available
+  • skipped macOS application code signing  reason=cannot find valid "Developer ID Application" identity or custom non-Apple code signing certificate, it could cause some undefined behaviour, e.g. macOS localized description not visible, see https://electron.build/code-signing allIdentities=     0 identities found
+                                                Valid identities only
+     0 valid identities found
+  • building        target=macOS zip arch=arm64 file=dist_electron/iLamage-1.0.0-arm64-mac.zip
+  • building block map  blockMapFile=dist_electron/iLamage-1.0.0-arm64-mac.zip.blockmap
+ DONE  Build complete!
